@@ -7,7 +7,6 @@
         private List<int> votes = new();
         private readonly IVoteConfig _config;
         private readonly AsyncVoteValidator _voteValidator;
-        private int totalPlayers;
 
         public AsyncVoteManager(IVoteConfig config)
         {
@@ -16,15 +15,14 @@
         }
 
         public int VoteCount => votes.Count;
-        public int RequiredVotes => _voteValidator.RequiredVotes(totalPlayers);
+        public int RequiredVotes => _voteValidator.RequiredVotes(ServerManager.ValidPlayerCount());
 
         public bool VotesAlreadyReached { get; set; } = false;
 
-        public void OnMapStart(string _mapName, int playerCount)
+        public void OnMapStart(string _mapName)
         {
             votes.Clear();
             VotesAlreadyReached = false;
-            totalPlayers = playerCount;
         }
 
         public VoteResult AddVote(int userId)
@@ -41,6 +39,7 @@
                 result = VoteResultEnum.Added;
             }
 
+            int totalPlayers = ServerManager.ValidPlayerCount();
             if (_voteValidator.CheckVotes(votes.Count, totalPlayers))
             {
                 VotesAlreadyReached = true;

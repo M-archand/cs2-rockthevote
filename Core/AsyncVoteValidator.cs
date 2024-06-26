@@ -4,6 +4,7 @@
     {
         private float VotePercentage = 0F;
         private IVoteConfig _config { get; set; }
+        private int totalPlayers = ServerManager.ValidPlayerCount();
 
         public AsyncVoteValidator(IVoteConfig config)
         {
