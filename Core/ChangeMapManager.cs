@@ -35,7 +35,7 @@ namespace cs2_rockthevote
         private bool _mapEnd = false;
 
         private Map[] _maps = new Map[0];
-        private Config _config;
+        private Config? _config;
 
         public ChangeMapManager(StringLocalizer localizer, PluginState pluginState, MapLister mapLister)
         {
@@ -75,7 +75,7 @@ namespace cs2_rockthevote
 
             _pluginState.MapChangeScheduled = false;
             Server.PrintToChatAll(_localizer.LocalizeWithPrefixInternal(_prefix, "general.changing-map", NextMap!));
-            _plugin.AddTimer(3.0F, () =>
+            _plugin?.AddTimer(3.0F, () =>
             {
                 Map map = _maps.FirstOrDefault(x => x.Name == NextMap!)!;
                 if (Server.IsMapValid(map.Name))
@@ -104,11 +104,11 @@ namespace cs2_rockthevote
             {
                 if (_pluginState.MapChangeScheduled)
                 {
-                    var delay = _config.EndOfMapVote.DelayToChangeInTheEnd - 3.0F; //subtracting the delay that is going to be applied by ChangeNextMap function anyway
+                    var delay = (_config?.EndOfMapVote.DelayToChangeInTheEnd ?? 0) - 3.0F; //subtracting the delay that is going to be applied by ChangeNextMap function anyway
                     if (delay < 0)
                         delay = 0;
 
-                    _plugin.AddTimer(delay, () =>
+                    _plugin?.AddTimer(delay, () =>
                     {
                         ChangeNextMap(true);
                     });
