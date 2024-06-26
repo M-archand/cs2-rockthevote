@@ -3,7 +3,6 @@
     public class AsyncVoteValidator
     {
         private float VotePercentage = 0F;
-        public int RequiredVotes { get => (int)Math.Round(ServerManager.ValidPlayerCount() * VotePercentage); }
         private IVoteConfig _config { get; set; }
 
         public AsyncVoteValidator(IVoteConfig config)
@@ -12,9 +11,14 @@
             VotePercentage = _config.VotePercentage / 100F;
         }
 
-        public bool CheckVotes(int numberOfVotes)
+        public int RequiredVotes(int totalPlayers)
         {
-            return numberOfVotes > 0 && numberOfVotes >= RequiredVotes;
+            return (int)Math.Ceiling(totalPlayers * VotePercentage);
+        }
+
+        public bool CheckVotes(int numberOfVotes, int totalPlayers)
+        {
+            return numberOfVotes > 0 && numberOfVotes >= RequiredVotes(totalPlayers);
         }
     }
 }
