@@ -66,7 +66,7 @@ namespace cs2_rockthevote
         public void OnMapsLoaded(object? sender, Map[] maps)
         {
             votemapMenu = new("Votemap");
-            votemapMenuHud = new("VoteMap");
+            votemapMenuHud = new CenterHtmlMenu("VoteMap", _plugin!);
             foreach (var map in _mapLister.Maps!.Where(x => x.Name != Server.MapName))
             {
                 votemapMenu.AddMenuOption(map.Name, (CCSPlayerController player, ChatMenuOption option) =>
@@ -126,7 +126,7 @@ namespace cs2_rockthevote
         public void OpenVotemapMenu(CCSPlayerController player)
         {
             if (_config.HudMenu)
-                MenuManager.OpenCenterHtmlMenu(_plugin, player, votemapMenuHud!);
+                MenuManager.OpenCenterHtmlMenu(_plugin!, player, votemapMenuHud!);
             else
                 MenuManager.OpenChatMenu(player, votemapMenu!);
         }

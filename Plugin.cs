@@ -49,9 +49,11 @@ namespace cs2_rockthevote
             _rtvManager = rtvManager;
             _timeLeft = timeLeft;
             _nextMap = nextMap;
+
+            Config = new Config();
         }
 
-        public Config? Config { get; set; }
+        public Config Config { get; set; }
 
         public string Localize(string prefix, string key, params object[] values)
         {
