@@ -74,6 +74,10 @@
   "emv.hud.timer": "投票决定下一张地图：{0}s",
   "emv.hud.finished": "投票完成，下一张地图：{0}",
 
-  "nextmap": "下一张地图将为{绿色}{0}",
-  "nextmap.decided-by-vote": "下一张地图将通过投票决定"
+  "nextmap": "下一张地图将为{green}{0}",
+  "nextmap.decided-by-vote": "下一张地图将通过投票决定",
+
+  "maplist.prefix": "{red}[MapList]{default}",
+  "maplist.empty": "地图列表为空！",
+  "maplist.printed-to-console": "地图已打印到控制台。"
 }

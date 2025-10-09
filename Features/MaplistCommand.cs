@@ -24,10 +24,10 @@ namespace cs2_rockthevote
         private readonly StringLocalizer _localizer;
         private readonly MapLister _mapLister;
 
-        public MaplistCommand(MapLister mapLister, StringLocalizer localizer, ILogger<RockTheVoteCommand> logger)
+        public MaplistCommand(MapLister mapLister, IStringLocalizer localizer, ILogger<RockTheVoteCommand> logger)
         {
             _mapLister = mapLister;
-            _localizer = localizer;
+            _localizer = new StringLocalizer(localizer, "maplist.prefix");
             _logger = logger;
         }
 
@@ -39,12 +39,12 @@ namespace cs2_rockthevote
                 var maps = _mapLister.Maps;
                 if (maps == null || maps.Length == 0)
                 {
-                    player.PrintToChat($" {ChatColors.LightRed}[MapList]{ChatColors.Default} The map list is empty!");
+                    player.PrintToChat(_localizer.LocalizeWithPrefix("maplist.empty"));
                     return;
                 }
 
                 // Tell them to check console
-                player.PrintToChat($" {ChatColors.LightRed}[MapList]{ChatColors.Default} Maps have been printed to the console.");
+                player.PrintToChat(_localizer.LocalizeWithPrefix("maplist.printed-to-console"));
 
                 player.PrintToConsole("====================================");
                 player.PrintToConsole("             Server Map List");

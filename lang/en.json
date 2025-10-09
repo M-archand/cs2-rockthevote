@@ -75,5 +75,9 @@
   "emv.hud.finished": "Vote finished, next map: {0}",
 
   "nextmap": "Next map will be {green}{0}",
-  "nextmap.decided-by-vote": "Next map will be decided by vote"
+  "nextmap.decided-by-vote": "Next map will be decided by vote",
+
+  "maplist.prefix": "{red}[MapList]{default}",
+  "maplist.empty": "The map list is empty!",
+  "maplist.printed-to-console": "Maps have been printed to the console."
 }
