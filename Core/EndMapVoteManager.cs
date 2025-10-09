@@ -110,7 +110,6 @@ namespace cs2_rockthevote
             
             _plugin?.AddTimer(delay, () =>
             {
-                _pluginState.EofVoteHappening = false;
                 _changeMapManager.OnMapStart(Server.MapName);
                 StartVote(isRtv: false);
             }, TimerFlags.STOP_ON_MAPCHANGE);
