@@ -33,6 +33,7 @@
   "nominate.multiple-maps": "您指的是哪张地图：",
 
   "general.votes-needed": "(已投票 {0}，需要 {1})",
+  "general.votes-basic": "(需要 {lime}{1} {default}票)",
   "general.invalid-map": "{lightred}地图无效",
   "general.validation.map-played-recently": "地图最近已玩过",
   "general.validation.current-map": "{lightred}您无法选择当前地图",
@@ -61,6 +62,7 @@
   "rtv.cooldown": "{lightred}命令正在冷却。（剩余 {white}{0}{red} 秒）",
   "rtv.time-up": "{lightred}在规定时间内投票的玩家不足。",
   "rtv.ui-question": "其他地图",
+  "rtv.instructions": "使用 {lime}!rtv {default} 来投票！",
 
   "emv.you-voted": "您投票支持 {0}",
   "emv.vote-started": "下一张地图的投票已经开始，请做出您的选择！",
@@ -68,6 +70,7 @@
   "emv.vote-ended-no-votes": "无人投票，下一张地图将为 {green}{0}",
   "emv.screenmenu-title": "地图投票：",
   "emv.hud.menu-title": "投票支持下一张地图：",
+  "emv.game-instructor": "在聊天中投票选择下一张地图！   ",
   "emv.hud.timer": "投票决定下一张地图：{0}s",
   "emv.hud.finished": "投票完成，下一张地图：{0}",
 
