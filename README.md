@@ -142,7 +142,9 @@ General purpose map voting plugin.
     "IncludeSpectator": true, # true = spectators can vote (only applicable to !rtv). false = spectators can't vote
   	"IncludeAFK": false, # true = AFK players are included in the vote count (only applicable to !rtv). false = AFK players aren't included in the vote count
   	"AFKCheckInterval": 60, # how often an AFK check occurs in seconds (compares players coordinates between current and last check, also run again when the vote is initiated)
-    "DiscordWebhook": "" # blank = no alert. Discord Webhook added will alert you to any workshop maps in your maplist.txt that are no longer on the workshop
+    "DiscordWebhook": "", # blank = no alert. Discord Webhook added will alert you to any workshop maps in your maplist.txt that are no longer on the workshop
+    "NominateCommand": "nom,nominate", # The command(s) used to nominate maps. Multiple commands can be set separated by commas
+    "EnableWorkshopMapValidation": false # true = validate workshop maps on map start and send alerts for invalid maps. false = disable workshop map validation
   }
 }
 ```
