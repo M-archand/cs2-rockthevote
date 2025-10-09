@@ -14,27 +14,6 @@ namespace cs2_rockthevote
 {
     public partial class Plugin
     {
-        [ConsoleCommand("css_nom", "Nominate a map to appear in the vote.")]
-        [ConsoleCommand("css_nominate", "Nominate a map to appear in the vote.")]
-        [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
-        public void OnNominateCommand(CCSPlayerController? player, CommandInfo command)
-        {
-            if (player == null)
-                return;
-            
-            // If "Permission" is blank or whitespace, allow everyone. Otherwise enforce it
-            string perm = Config.Nominate.Permission;
-            bool hasPerm = string.IsNullOrWhiteSpace(perm) || AdminManager.PlayerHasPermissions(player, perm);
-
-            if (!hasPerm)
-            {
-                command.ReplyToCommand(_localizer.LocalizeWithPrefix("general.incorrect.permission"));
-                return;
-            }
-
-            _nominationManager.CommandHandler(player, command.GetArg(1)?.Trim().ToLower() ?? "");
-        }
-
         [GameEventHandler(HookMode.Pre)]
         public HookResult EventPlayerDisconnectNominate(EventPlayerDisconnect @event, GameEventInfo @eventInfo)
         {
@@ -53,12 +32,14 @@ namespace cs2_rockthevote
         Dictionary<int, List<string>> Nominations = new();
         private ChatMenu? _nominationMenu;
         private NominateConfig _nomConfig = new();
+        private GeneralConfig _generalConfig = new();
         private GameRules _gamerules;
         private StringLocalizer _localizer;
         private PluginState _pluginState;
         private MapCooldown _mapCooldown;
         private MapLister _mapLister;
         private Plugin? _plugin;
+        private string[] _permission = Array.Empty<string>();
 
         public NominationCommand(MapLister mapLister, GameRules gamerules, StringLocalizer localizer, PluginState pluginState, MapCooldown mapCooldown, ILogger<NominationCommand> logger)
         {
@@ -76,6 +57,7 @@ namespace cs2_rockthevote
         {
             Nominations.Clear();
         }
+        
         public void OnLoad(Plugin plugin)
         {
             _plugin = plugin;
@@ -84,6 +66,46 @@ namespace cs2_rockthevote
         public void OnConfigParsed(Config config)
         {
             _nomConfig = config.Nominate;
+            _generalConfig = config.General;
+            
+            // Parse permission
+            _permission = string.IsNullOrWhiteSpace(_nomConfig.Permission)
+                ? Array.Empty<string>()
+                : [.. _nomConfig.Permission
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Where(p => !string.IsNullOrWhiteSpace(p))
+                    .Distinct(StringComparer.Ordinal)];
+
+            // Register dynamic commands
+            if (string.IsNullOrWhiteSpace(_generalConfig.NominateCommand))
+                return;
+
+            Server.NextFrame(() =>
+            {
+                foreach (var alias in _generalConfig.NominateCommand.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    _plugin?.AddCommand(alias, "Nominate a map to appear in the vote.", ExecuteCommand);
+                }
+            });
+        }
+
+        private void ExecuteCommand(CCSPlayerController? player, CommandInfo command)
+        {
+            if (player == null || !player.IsValid)
+                return;
+
+            // Check permission
+            if (_permission.Length > 0)
+            {
+                bool allowed = _permission.Any(perm => AdminManager.PlayerHasPermissions(player, perm));
+                if (!allowed)
+                {
+                    command.ReplyToCommand(_localizer.LocalizeWithPrefix("general.incorrect.permission"));
+                    return;
+                }
+            }
+
+            CommandHandler(player, command.GetArg(1)?.Trim().ToLower() ?? "");
         }
 
         public void OnMapsLoaded(object? sender, Map[] maps)

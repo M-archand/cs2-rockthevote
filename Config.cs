@@ -96,6 +96,8 @@ namespace cs2_rockthevote
         public bool IncludeAFK { get; set; } = true;
         public int AFKCheckInterval { get; set; } = 30;
         public string DiscordWebhook { get; set; } = "";
+        public string NominateCommand { get; set; } = "nom,nominate";
+        public bool EnableWorkshopMapValidation { get; set; } = false;
     }
 
     public class Config : BasePluginConfig, IBasePluginConfig

@@ -21,7 +21,7 @@ namespace cs2_rockthevote
 
         public void OnMapStart(string map)
         {
-            if (!validated)
+            if (!validated && _config.EnableWorkshopMapValidation)
                 _ = ValidateAllMapsAsync();
             validated = true;
         }
