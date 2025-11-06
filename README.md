@@ -16,6 +16,10 @@ General purpose map voting plugin.
 - Vote Extend command. !ve/!votextend starts a vote to extend the current map (flag restricted)
 - Map Chooser command. !mapmenu opens a menu with your map list, selected map is changed to immediately (flag restricted)
 - Optional sound alert when map vote or !rtv starts (configurable sound)
+- Optional hud alert
+  
+  ![hudalert](https://github.com/user-attachments/assets/23c35f20-b4f0-4122-b241-287b44efdb27)
+  
 - Optional chat/hud vote countdown
 
  ![hudcountdown](https://github.com/user-attachments/assets/e1034f3c-340a-4d88-8d8a-96526f333fad)
@@ -27,7 +31,7 @@ General purpose map voting plugin.
 ![voteextend](https://github.com/user-attachments/assets/5cfd9a5f-36a5-4a11-ae26-3e74d5387251)
 - ChatMenu/CenterHtmlMenu/WasdMenu/ConsoleMenu for EndOfMapVote/!nominate/!votemap (ScreenMenu temporarily removed)
 
-![screenmenu](https://github.com/user-attachments/assets/374a7899-f887-4425-a01e-decae1a203b0)
+![wasdmenu](https://github.com/user-attachments/assets/1df185bf-4313-4010-81de-98111ae383dc)
 ![chatmenu](https://github.com/user-attachments/assets/8d7e9ee8-b26e-47b1-89d8-ced96b13a392)
 ![hudmenu](https://github.com/user-attachments/assets/0fd37e45-bf7f-4f97-9b7b-7fab92352392)
 
@@ -42,7 +46,7 @@ General purpose map voting plugin.
 
 
 ## Requirements
-[CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp) (Tested on v323)
+[CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp) (Tested on v337)
 
 [CS2MenuManager](https://github.com/schwarper/CS2MenuManager) (Tested on v39)
 
@@ -58,7 +62,7 @@ General purpose map voting plugin.
 
 ```json
 {
-  "ConfigVersion": 18,
+  "ConfigVersion": 19,
   "Rtv": {
     "Enabled": true,
     "EnabledInWarmup": false,
@@ -94,6 +98,7 @@ General purpose map voting plugin.
     "EnableCountdown": false, # Whether the chat/hud countdown is enabled
     "CountdownType": "chat", # chat = prints to chat on an interval how much time is left in the vote. hud = persistent alert on the hud counting down as each second passes
     "ChatCountdownInterval": 30 # If CountdownType = chat, how often we print to chat how much time is remaining to vote
+    "EnableHint": true # Shows a message in the center of the screen for 5 seconds notifying that the map vote has started
   },
   "Nominate": {
     "Enabled": true,
@@ -134,6 +139,9 @@ General purpose map voting plugin.
     "MapsInCoolDown": 3, # How many recent maps that won't appear again in the End of Map Vote/can't be nominated.
     "HideHudAfterVote": true, # Only applicable in MenuType = HudMenu. true = closes the hud after the player has voted
     "RandomStartMap": false, # true = a random map will be used when the server restarts. false = will use whatever you set in your startup command
+    "IncludeSpectator": true, # true = spectators can vote (only applicable to !rtv). false = spectators can't vote
+  	"IncludeAFK": false, # true = AFK players are included in the vote count (only applicable to !rtv). false = AFK players aren't included in the vote count
+  	"AFKCheckInterval": 60, # how often an AFK check occurs in seconds (compares players coordinates between current and last check, also run again when the vote is initiated)
     "DiscordWebhook": "" # blank = no alert. Discord Webhook added will alert you to any workshop maps in your maplist.txt that are no longer on the workshop
   }
 }
@@ -152,7 +160,6 @@ de_dust2
 - [ ] Add vote percentage required for winning map (e.g. must receive 25% of the vote)
 - [ ] Add vote runnoff (e.g. 2nd stage of voting between 2 maps if minimum vote percentage not achieved for a map)
 - [ ] Add !revote to allow players to change their vote
-- [ ] Add live vote count to ScreenMenu and allow menu to optionally stay open.
 
 # Translations
 | Language             |
