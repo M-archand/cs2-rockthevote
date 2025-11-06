@@ -95,6 +95,7 @@ namespace cs2_rockthevote
         public bool IncludeSpectator { get; set; } = true;
         public bool IncludeAFK { get; set; } = true;
         public int AFKCheckInterval { get; set; } = 30;
+        public bool EnableMapValidation { get; set; } = true;
         public string DiscordWebhook { get; set; } = "";
     }
 

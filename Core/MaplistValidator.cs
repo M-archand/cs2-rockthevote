@@ -1,5 +1,3 @@
-using CounterStrikeSharp.API;
-using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Cvars;
 using Microsoft.Extensions.Logging;
 using System.Text;
@@ -21,7 +19,7 @@ namespace cs2_rockthevote
 
         public void OnMapStart(string map)
         {
-            if (!validated)
+            if (!validated && _config.EnableMapValidation)
                 _ = ValidateAllMapsAsync();
             validated = true;
         }
