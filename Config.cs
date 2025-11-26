@@ -16,6 +16,8 @@ namespace cs2_rockthevote
         public string SoundPath { get; set; } = "sounds/vo/announcer/cs2_classic/felix_broken_fang_pick_1_map_tk01.vsnd_c";
         public int MapsToShow { get; set; } = 6;
         public bool AlwaysActive { get; set; } = true;
+        public bool AlwaysActiveReminder { get; set; } = true;
+        public int ReminderInterval { get; set; } = 180;
         public int RtvVoteDuration { get; set; } = 60;
         public int MapVoteDuration { get; set; } = 60;
         public int CooldownDuration { get; set; } = 180;
