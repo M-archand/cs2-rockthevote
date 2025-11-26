@@ -51,8 +51,10 @@
   "general.eligible": "Brak uprawnionych graczy, głosowanie anulowane.",
   "general.spectator": "Widzowie są wykluczeni z tego głosowania.",
   "general.afk": "Byłeś AFK w momencie rozpoczęcia głosowania. Nie możesz wziąć udziału w tym głosowaniu.",
+  "general.votes-basic": "({lime}{1} {default}głosów potrzebnych)",
 
   "rtv.rocked-the-vote": "{green}{0}{default} chce wygrać głosowanie!",
+  "rtv.in-progress": "{default} Trwa {red}!rtv {default}głosowanie. Pozostałe wymagane głosy: {green}{0}",
   "rtv.already-rocked-the-vote": "Już wygrałeś głosowanie",
   "rtv.votes-reached": "{green}Liczba głosów osiągnięta, rozpoczynamy głosowanie…",
   "rtv.failed": "{lightred}Głosowanie nieudane!",
@@ -61,6 +63,7 @@
   "rtv.cooldown": "{lightred}Polecenie jest w trakcie odnawiania. (pozostało {white}{0}{red} sekund)",
   "rtv.time-up": "{lightred}Za mało graczy zagłosowało w limicie czasu.",
   "rtv.ui-question": "inna mapa",
+   "rtv.instructions": "Użyj {lime}!rtv {default}, aby oddać głos!",
 
   "emv.you-voted": "Zagłosowałeś na {0}",
   "emv.vote-started": "Rozpoczęło się głosowanie na kolejną mapę, wybierz swoją!",
@@ -68,6 +71,7 @@
   "emv.vote-ended-no-votes": "Brak głosów, następna mapa będzie {zielona}{0}",
   "emv.screenmenu-title": "Głosowanie na mapę:",
   "emv.hud.menu-title": "Głosuj na następną mapę:",
+  "emv.game-instructor": "Głosuj na następną mapę na czacie!",
   "emv.hud.timer": "Głosuj na następną mapę: {0}s",
   "emv.hud.finished": "Głosowanie zakończone, następna mapa: {0}",
 

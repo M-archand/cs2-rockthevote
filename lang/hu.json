@@ -51,8 +51,10 @@
   "general.eligible": "Nincsenek jogosult játékosok, a szavazás törölve.",
   "general.spectator": "A nézők nem vehetnek részt ezen a szavazáson.",
   "general.afk": "A szavazás kezdeményezésekor AFK voltál. Nem vehetsz részt ebben a szavazásban.",
+  "general.votes-basic": "({lime}{1} {default}szükséges szavazat)",
 
   "rtv.rocked-the-vote": "{green}{0}{default} szavazást akar indítani!",
+  "rtv.in-progress": "{default} Egy {red}!rtv {default}szavazás folyamatban. Hátralévő szükséges szavazatok: {green}{0}",
   "rtv.already-rocked-the-vote": "Már szavaztál",
   "rtv.votes-reached": "{green}Elért szavazatok száma, szavazás indítása...",
   "rtv.failed": "{lightred}A szavazás sikertelen!",
@@ -61,6 +63,7 @@
   "rtv.cooldown": "{lightred}A parancs lehűlési időn van. ({white}{0}{red} másodperc van hátra)",
   "rtv.time-up": "{lightred}Nem szavazott elég játékos az időkorlát alatt.",
   "rtv.ui-question": "egy másik pálya",
+  "rtv.instructions": "Használd a {lime}!rtv {default} parancsot a szavazáshoz!",
 
   "emv.you-voted": "A következőre szavaztál: {0}",
   "emv.vote-started": "Elkezdődött a szavazás a következő térképre, válassz!",
@@ -68,6 +71,7 @@
   "emv.vote-ended-no-votes": "Nincsenek szavazatok, a következő pálya {green}{0} lesz",
   "emv.screenmenu-title": "Szavazás a pályára:",
   "emv.hud.menu-title": "Szavazz a következő pályára:",
+  "emv.game-instructor": "Szavazz a következő pályára a chaten!",
   "emv.hud.timer": "Szavazás a következő pályára: {0}",
   "emv.hud.finished": "Szavazás befejezve, következő pálya: {0}",
 

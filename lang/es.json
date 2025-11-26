@@ -51,8 +51,10 @@
     "general.eligible": "No hay jugadores elegibles, votación cancelada.",
     "general.spectator": "Los espectadores están excluidos de esta votación.",
     "general.afk": "Estabas ausente cuando se inició la votación. No puedes participar.",
+    "general.votes-basic": "({lime}{1} {default}votos necesarios)",
 
     "rtv.rocked-the-vote": "¡{green}{0}{default} quiere arrasar en la votación!",
+    "rtv.in-progress": "{default} Un {red}!rtv {default}está en curso. Votos restantes requeridos: {green}{0}",
     "rtv.already-rocked-the-vote": "Ya arrasaste en la votación",
     "rtv.votes-reached": "{green}Número de votos alcanzado, votación inicial...",
     "rtv.failed": "{lightred}¡Votación fallida!",
@@ -61,6 +63,7 @@
     "rtv.cooldown": "{lightred}El comando está en espera. ({white}{0}{red} segundos restantes)",
     "rtv.time-up": "{lightred}No hubo suficientes jugadores votando durante el tiempo límite.",
     "rtv.ui-question": "un mapa diferente",
+    "rtv.instructions": "Usa {lime}!rtv {default} para emitir tu voto!",
 
     "emv.you-voted": "Votaste por {0}",
     "emv.vote-started": "¡Ya empezó la votación para el próximo mapa, haz tu elección!",
@@ -68,6 +71,7 @@
     "emv.vote-ended-no-votes": "Sin votos, el siguiente mapa será {verde}{0}",
     "emv.screenmenu-title": "Votación del mapa:",
     "emv.hud.menu-title": "Votación para el siguiente mapa:",
+    "emv.game-instructor": "¡Vota por el próximo mapa en el chat!",
     "emv.hud.timer": "Votación para el siguiente mapa: {0}s",
     "emv.hud.finished": "Votación finalizada, siguiente mapa: {0}",
 

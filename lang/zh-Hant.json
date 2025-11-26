@@ -1,4 +1,5 @@
 {
+  // Chinese (Traditional)
   "rtv.prefix": "{red}[RTV]{default}",
   "votemap.prefix": "{red}[VoteMap]{default}",
   "extendtime.prefix": "{red}[VoteExtend]{default}",
@@ -53,6 +54,7 @@
   "general.afk": "你在投票開始時 AFK，無法參與本次投票。",
 
   "rtv.rocked-the-vote": "{green}{0}{default} 想要發起換圖投票！",
+  "rtv.in-progress": "{default} 一個 {red}!rtv {default}正在進行中。剩餘所需票數：{green}{0}",
   "rtv.already-rocked-the-vote": "你已經發起過換圖投票了",
   "rtv.votes-reached": "{green}票數已達標，開始投票...",
   "rtv.failed": "{lightred}投票失敗！",

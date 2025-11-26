@@ -51,8 +51,10 @@
   "general.eligible": "Il n'y a aucun joueur éligible, vote annulé.",
   "general.spectator": "Les spectateurs sont exclus de ce vote.",
   "general.afk": "Vous étiez absent au moment du vote. Vous ne pouvez pas participer à ce vote.",
+  "general.votes-basic": "({lime}{1} {default}votes nécessaires)",
   
   "rtv.rocked-the-vote": "{green}{0}{default} veut faire basculer le vote!",
+  "rtv.in-progress": "{default} Un {red}!rtv {default}est en cours. Votes restants requis : {green}{0}",
   "rtv.already-rocked-the-vote" : "Vous avez déjà fait basculer le vote",
   "rtv.votes-reached": "{green}Nombre de votes atteints, début du vote...",
   "rtv.failed": "{lightred}Vote échoué!",
@@ -61,6 +63,7 @@
   "rtv.cooldown": "{lightred}La commande est en temps de rechargement. ({white}{0}{red} secondes restantes)",
   "rtv.time-up": "{lightred}Pas assez de joueurs ont voté pendant le temps imparti.",
   "rtv.ui-question" : "une autre carte",
+  "rtv.instructions": "Utilisez {lime}!rtv {default} pour voter !",
   
   "emv.you-voted": "Vous avez voté pour {0}",
   "emv.vote-started": "Le vote pour la prochaine carte a commencé, faites votre choix !",
@@ -68,6 +71,7 @@
   "emv.vote-ended-no-votes": "Aucun vote, la prochaine carte sera {green}{0}",
   "emv.screenmenu-title": "Vote pour la carte:",
   "emv.hud.menu-title": "Votez pour la prochaine carte:",
+  "emv.game-instructor": "Votez pour la prochaine carte dans le chat !",
   "emv.hud.timer": "Votez pour la prochaine carte: {0}s",
   "emv.hud.finished": "Vote terminé, prochaine carte: {0}",
   

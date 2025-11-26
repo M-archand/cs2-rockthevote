@@ -51,8 +51,10 @@
   "general.eligible": "Nav neviena tiesīga spēlētāja, balsojums atcelts.",
   "general.spectator": "Skatītāji šajā balsojumā nevar piedalīties.",
   "general.afk": "Jūs bijāt izslēgts, kad balsošana tika uzsākta. Jūs nevarat piedalīties šajā balsojumā.",
+  "general.votes-basic": "({lime}{1} {default}balsis nepieciešamas)",
 
   "rtv.rocked-the-vote": "{green}{0}{default} vēlas mainīt balsošanas rezultātu!",
+  "rtv.in-progress": "{default} Notiek {red}!rtv {default}balsojums. Atlikušās nepieciešamās balsis: {green}{0}",
   "rtv.already-rocked-the-vote": "Jūs jau esat veicis izmaiņas balsošanas rezultātos",
   "rtv.votes-reached": "{green}Sasniegto balsu skaits, sāk balsošanu...",
   "rtv.failed": "{lightred}Balsošana neizdevās!",
@@ -61,6 +63,7 @@
   "rtv.cooldown": "{lightred}Komanda atrodas nogaidīšanas periodā. (atlikušas {white}{0}{red} sekundes)",
   "rtv.time-up": "{lightred}Laika ierobežojumā nav nobalsojis pietiekami daudz spēlētāju.",
   "rtv.ui-question": "cita karte",
+  "rtv.instructions": "Izmanto {lime}!rtv {default}, lai nobalsotu!",
 
   "emv.you-voted": "Jūs balsojāt par {0}",
   "emv.vote-started": "Balsošana par nākamo karti ir sākusies, izdari savu izvēli!",
@@ -68,6 +71,7 @@
   "emv.vote-ended-no-votes": "Nav balsu, nākamā karte būs {green}{0}",
   "emv.screenmenu-title": "Balsojums par karti:",
   "emv.hud.menu-title": "Balsojiet par nākamo karti:",
+  "emv.game-instructor": "Balso par nākamo karti čatā!",
   "emv.hud.timer": "Balsojiet par nākamo karti: {0}s",
   "emv.hud.finished": "Balsošana pabeigta, nākamā karte: {0}",
 

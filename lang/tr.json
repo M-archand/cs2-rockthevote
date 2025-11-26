@@ -51,8 +51,10 @@
   "general.eligible": "Uygun oyuncu bulunamadı, oylama iptal edildi.",
   "general.spectator": "Seyirciler bu oylamaya dahil edilmemiştir.",
   "general.afk": "Oylama başlatıldığında AFK'tınız. Bu oylamaya katılamazsınız.",
+  "general.votes-basic": "({lime}{1} {default}oy gerekli)",
 
   "rtv.rocked-the-vote": "{green}{0}{default} oyu sallamak istiyor!",
+  "rtv.in-progress": "{default} Bir {red}!rtv {default}oylaması devam ediyor. Gerekli kalan oylar: {green}{0}",
   "rtv.already-rocked-the-vote": "Oyu sallamışsınız bile",
   "rtv.votes-reached": "{green}Oy sayısı ulaşıldı, oylama başlıyor...",
   "rtv.failed": "{lightred}Oylama başarısız oldu!",
@@ -61,6 +63,7 @@
   "rtv.cooldown": "{lightred}Komut beklemede. ({white}{0}{red} saniye kaldı)",
   "rtv.time-up": "{lightred}Zaman sınırı içinde yeterli sayıda oyuncu oy kullanmadı.",
   "rtv.ui-question": "farklı bir map",
+  "rtv.instructions": "{lime}!rtv {default}komutuyla oy ver!",
 
   "emv.you-voted": "{0} için oy verdiniz",
   "emv.vote-started": "Bir sonraki harita için oylama başladı, seçiminizi yapın!",
@@ -68,6 +71,7 @@
   "emv.vote-ended-no-votes": "Oy yok, bir sonraki harita {green}{0} olacak",
   "emv.screenmenu-title": "Harita Oyu:",
   "emv.hud.menu-title": "Bir sonraki harita için oy verin:",
+  "emv.game-instructor": "Sonraki harita için sohbette oy ver!",
   "emv.hud.timer": "Bir sonraki harita için oy verin: {0}s",
   "emv.hud.finished": "Oylama sona erdi, bir sonraki harita: {0}",
 

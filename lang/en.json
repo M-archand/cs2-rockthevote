@@ -54,6 +54,7 @@
   "general.afk": "You were AFK when the vote was initiated. You can't participate in this vote.",
 
   "rtv.rocked-the-vote": "{green}{0}{default} wants to rock the vote!",
+  "rtv.in-progress": "{default} An {red}!rtv {default}is in-progress. Remaining votes required: {green}{0}",
   "rtv.already-rocked-the-vote": "You already rocked the vote",
   "rtv.votes-reached": "{green}Number of votes reached, starting vote...",
   "rtv.failed": "{lightred}Vote failed!",
