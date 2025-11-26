@@ -50,6 +50,7 @@ namespace cs2_rockthevote
         private Plugin? _plugin;
         private Timer? _cooldownTimer;
         private Timer? _rtvTimer;
+        private Timer? _reminderTimer;
 
         public int TimeLeft => (int)Math.Max(0, (_rtvEndTime - DateTime.UtcNow).TotalSeconds);
 
@@ -81,6 +82,7 @@ namespace cs2_rockthevote
             _voteManager?.OnMapStart(map);
             StopRtvTimer();
             KillTimer();
+            StopReminderTimer();
         }
 
         private IEnumerable<CCSPlayerController> EligiblePlayers()
@@ -141,6 +143,8 @@ namespace cs2_rockthevote
         {
             try
             {
+                bool alwaysActive = _config.AlwaysActive;
+
                 if (player == null)
                     return;
 
@@ -162,7 +166,9 @@ namespace cs2_rockthevote
                     player.PrintToChat(_localizer.LocalizeWithPrefix("rtv.cooldown", secondsInt));
                     return;
                 }
-                if (!_config.Enabled || otherVoteInProgress)
+                if (!_config.Enabled || (alwaysActive
+                        ? (_pluginState.MapChangeScheduled || _pluginState.EofVoteHappening)
+                        : otherVoteInProgress))
                 {
                     player.PrintToChat(_localizer.LocalizeWithPrefix("rtv.disabled"));
                     return;
@@ -185,7 +191,7 @@ namespace cs2_rockthevote
                 
                 Server.PrintToConsole($"[RockTheVote] RTV starting (caller: {Tag(player)}), IncludeAFK={_generalConfig.IncludeAFK}");
 
-                if (_config.EnablePanorama)
+                if (_config.EnablePanorama && !alwaysActive)
                 {
                     PanoramaVote.Init();
                     Server.ExecuteCommand("sv_allow_votes 1");
@@ -238,7 +244,7 @@ namespace cs2_rockthevote
                     }
                 }
 
-                if (!_config.EnablePanorama)
+                if (!_config.EnablePanorama || alwaysActive)
                 {
                     if (!_generalConfig.IncludeAFK)
                         _afk.CheckAllPlayers();
@@ -269,14 +275,18 @@ namespace cs2_rockthevote
                     switch (result.Result)
                     {
                         case VoteResultEnum.Added:
-                            if (_rtvTimer == null)
+                            if (!alwaysActive && _rtvTimer == null)
                                 StartRtvTimer();
+                            else if (alwaysActive)
+                                StartReminderTimer();
                             Server.PrintToChatAll($"{_localizer.LocalizeWithPrefix("rtv.rocked-the-vote", player.PlayerName)} {_localizer.Localize("general.votes-needed", result.VoteCount, requiredYesVotes)}");
                             Server.PrintToChatAll($"{_localizer.LocalizeWithPrefix("rtv.instructions")}");
                             // Early pass if threshold met
                             if (result.VoteCount >= requiredYesVotes)
                             {
-                                StopRtvTimer();
+                                if (!alwaysActive)
+                                    StopRtvTimer();
+                                StopReminderTimer();
                                 _endmapVoteManager.StartVote(isRtv: true);
                                 Server.PrintToChatAll(_localizer.LocalizeWithPrefix("rtv.votes-reached"));
                             }
@@ -288,19 +298,25 @@ namespace cs2_rockthevote
                             // Early pass if threshold met
                             if (result.VoteCount >= requiredYesVotes)
                             {
-                                StopRtvTimer();
+                                if (!alwaysActive)
+                                    StopRtvTimer();
+                                StopReminderTimer();
                                 _endmapVoteManager.StartVote(isRtv: true);
                                 Server.PrintToChatAll(_localizer.LocalizeWithPrefix("rtv.votes-reached"));
                             }
                             break;
 
                         case VoteResultEnum.VotesAlreadyReached:
-                            StopRtvTimer();
+                            if (!alwaysActive)
+                                StopRtvTimer();
+                            StopReminderTimer();
                             player.PrintToChat(_localizer.LocalizeWithPrefix("rtv.disabled"));
                             break;
 
                         case VoteResultEnum.VotesReached:
-                            StopRtvTimer();
+                            if (!alwaysActive)
+                                StopRtvTimer();
+                            StopReminderTimer();
                             _endmapVoteManager.StartVote(isRtv: true);
                             Server.PrintToChatAll($"{_localizer.LocalizeWithPrefix("rtv.rocked-the-vote", player.PlayerName)} {_localizer.Localize("general.votes-needed", result.VoteCount, requiredYesVotes)}");
                             Server.PrintToChatAll(_localizer.LocalizeWithPrefix("rtv.votes-reached"));
@@ -315,7 +331,7 @@ namespace cs2_rockthevote
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"Something went wrong with the rtv command: {ex.Message}");
+                _logger.LogWarning(ex, "Something went wrong with the rtv command: {Message}", ex.Message);
             }
         }
 
@@ -381,7 +397,7 @@ namespace cs2_rockthevote
                                     }
                                     catch (Exception ex)
                                     {
-                                        _logger.LogError($"Error during vote cancellation: {ex.Message}");
+                                        _logger.LogError(ex, "Error during vote cancellation: {Message}", ex.Message);
                                     }
                                 });
                                 return;
@@ -398,7 +414,7 @@ namespace cs2_rockthevote
                                     }
                                     catch (Exception ex)
                                     {
-                                        _logger.LogError($"Error during early vote pass: {ex.Message}");
+                                        _logger.LogError(ex, "Error during early vote pass: {Message}", ex.Message);
                                     }
                                 });
                                 return;
@@ -407,7 +423,7 @@ namespace cs2_rockthevote
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError($"Error processing vote: {ex.Message}");
+                        _logger.LogError(ex, "Error processing vote: {Message}", ex.Message);
                     }
                     break;
 
@@ -447,10 +463,67 @@ namespace cs2_rockthevote
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError($"ChatCountdown timer callback failed: {ex.Message}");
+                        _logger.LogError(ex, "ChatCountdown timer callback failed: {Message}", ex.Message);
                     }
                 }, TimerFlags.STOP_ON_MAPCHANGE
             );
+        }
+
+        private void StartReminderTimer()
+        {
+            if (_reminderTimer != null || !_config.AlwaysActive || !_config.AlwaysActiveReminder)
+                return;
+
+            if (_config.ReminderInterval <= 0)
+                return;
+
+            _reminderTimer = _plugin?.AddTimer(
+                _config.ReminderInterval,() =>
+                {
+                    try
+                    {
+                        SendReminder();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "RTV reminder failed: {Message}", ex.Message);
+                    }
+                },
+                TimerFlags.STOP_ON_MAPCHANGE | TimerFlags.REPEAT
+            );
+        }
+
+        private void SendReminder()
+        {
+            if (_voteManager == null || !_config.AlwaysActive || !_config.AlwaysActiveReminder)
+            {
+                StopReminderTimer();
+                return;
+            }
+
+            if (_voteManager.VotesAlreadyReached)
+            {
+                StopReminderTimer();
+                return;
+            }
+
+            int eligible = Math.Max(EligibleCount(), 0);
+            int requiredYesVotes = (int)Math.Ceiling(eligible * (_config.VotePercentage / 100.0));
+            int remaining = Math.Max(requiredYesVotes - _voteManager.VoteCount, 0);
+
+            if (remaining <= 0)
+            {
+                StopReminderTimer();
+                return;
+            }
+
+            Server.PrintToChatAll(_localizer.LocalizeWithPrefix("rtv.in-progress", remaining));
+        }
+
+        private void StopReminderTimer()
+        {
+            _reminderTimer?.Kill();
+            _reminderTimer = null;
         }
 
         private void ActivateCooldown()
