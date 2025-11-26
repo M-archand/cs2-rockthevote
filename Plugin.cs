@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Localization;
 using CS2MenuManager.API.Class;
+using CounterStrikeSharp.API.Modules.Events;
 
 namespace cs2_rockthevote
 {
@@ -40,7 +41,7 @@ namespace cs2_rockthevote
         ILogger<Plugin> logger) : BasePlugin, IPluginConfig<Config>
     {
         public override string ModuleName => "RockTheVote";
-        public override string ModuleVersion => "2.1.1";
+        public override string ModuleVersion => "2.1.2";
         public override string ModuleAuthor => "abnerfs (Updated by Marchand)";
 
         private readonly DependencyManager<Plugin, Config> _dependencyManager = dependencyManager;
@@ -105,7 +106,7 @@ namespace cs2_rockthevote
             _dependencyManager.OnConfigParsed(config);
 
             if (config.Version < Config.Version)
-                Logger.LogWarning($"Configuration version mismatch (Expected: {0} | Current: {1})", Config.Version, config.Version);
+                Logger.LogWarning("Configuration version mismatch (Expected: {ExpectedVersion} | Current: {CurrentVersion})", Config.Version, config.Version);
         }
 
         /*
@@ -131,6 +132,23 @@ namespace cs2_rockthevote
                 }
             }
 
+            return HookResult.Continue;
+        }
+        
+
+        [GameEventHandler(HookMode.Post)]
+        public HookResult OnChat(EventPlayerChat @event, GameEventInfo info)
+        {
+            
+            var player = Utilities.GetPlayerFromUserid(@event.Userid);
+            if (player is not null)
+            {
+                var text = @event.Text.Trim().ToLower();
+                if (text == "rtv")
+                {
+                    _rtvManager.CommandHandler(player);
+                }
+            }
             return HookResult.Continue;
         }
         */
