@@ -54,7 +54,7 @@ namespace cs2_rockthevote
         private readonly VoteExtendRoundTimeCommand _voteExtendRoundTime = voteExtendRoundTime;
         private readonly TimeLeftCommand _timeLeft = timeLeft;
         private readonly MaplistCommand _maplistManager = maplistManager;
-        private StringLocalizer _localizer = new(stringLocalizer, "rtv.prefix");
+        private readonly StringLocalizer _localizer = new(stringLocalizer, "rtv.prefix");
         private readonly ILogger<Plugin> _logger = logger;
         private readonly PluginState _pluginState = pluginState;
         private bool _hasMenuManager = false;
@@ -93,6 +93,9 @@ namespace cs2_rockthevote
                 Server.PrintToConsole("CS2MenuManager API not found! It is required to use RockTheVote. Download it from here: https://github.com/schwarper/CS2MenuManager");
                 Logger.LogWarning("CS2MenuManager API not found! It is required to use RockTheVote. Download it from here: https://github.com/schwarper/CS2MenuManager");
             }
+
+            if (_hasMenuManager)
+                 Server.PrintToConsole("CS2MenuManager API detected; RTV menu features enabled!");
         }
         
         public override void Unload(bool hotReload)
@@ -132,23 +135,6 @@ namespace cs2_rockthevote
                 }
             }
 
-            return HookResult.Continue;
-        }
-        
-
-        [GameEventHandler(HookMode.Post)]
-        public HookResult OnChat(EventPlayerChat @event, GameEventInfo info)
-        {
-            
-            var player = Utilities.GetPlayerFromUserid(@event.Userid);
-            if (player is not null)
-            {
-                var text = @event.Text.Trim().ToLower();
-                if (text == "rtv")
-                {
-                    _rtvManager.CommandHandler(player);
-                }
-            }
             return HookResult.Continue;
         }
         */
