@@ -25,6 +25,7 @@ namespace cs2_rockthevote
         private readonly PluginState _pluginState;
         private readonly MapCooldown _mapCooldown;
         private Timer? Timer;
+        private Timer? _nextVoteTimer;
         List<string> mapsElected = new();
         private int _canVote = 0;
         private Plugin? _plugin;
@@ -100,20 +101,30 @@ namespace cs2_rockthevote
             TimeLeft = 0;
             mapsElected.Clear();
             KillTimer();
+            KillNextVoteTimer();
+        }
+
+        private void KillNextVoteTimer()
+        {
+            _nextVoteTimer?.Kill();
+            _nextVoteTimer = null;
         }
 
         public void ScheduleNextVote()
         {
-            int newRemainingSeconds = (int)(_gameRules.RoundTime - (Server.CurrentTime - _gameRules.GameStartTime));
-            int triggerSeconds = _endMapConfig.TriggerSecondsBeforeEnd;
-            int delay = Math.Max(newRemainingSeconds - triggerSeconds, 0);
-            
-            _plugin?.AddTimer(delay, () =>
+            KillNextVoteTimer();
+
+            _nextVoteTimer = _plugin?.AddTimer(1.0F, () =>
             {
-                _pluginState.EofVoteHappening = false;
-                _changeMapManager.OnMapStart(Server.MapName);
-                StartVote(isRtv: false);
-            }, TimerFlags.STOP_ON_MAPCHANGE);
+                float timeRemainingSeconds = (float)Math.Max(0, (double)_timeLimitManager.TimeRemaining);
+                if (timeRemainingSeconds <= _endMapConfig.TriggerSecondsBeforeEnd)
+                {
+                    KillNextVoteTimer();
+                    _pluginState.EofVoteHappening = false;
+                    _changeMapManager.OnMapStart(Server.MapName);
+                    StartVote(isRtv: false);
+                }
+            }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
         }
 
         public void MapVoted(CCSPlayerController player, string mapName, bool isRtv)
@@ -295,6 +306,7 @@ namespace cs2_rockthevote
 
         public void StartVote(bool isRtv)
         {
+            KillNextVoteTimer();
             if (_pluginState.EofVoteHappening)
                 return;
 

@@ -2,11 +2,12 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Timers;
+using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 using cs2_rockthevote.Core;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Data;
-using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
 namespace cs2_rockthevote
 {
@@ -221,16 +222,20 @@ namespace cs2_rockthevote
         {
             try
             {
-                int timePlayed = (int)(Server.CurrentTime - gameRules.GameStartTime);
-                
-                gameRules.RoundTime += minutesToExtendBy * 60;
-                
+                int timePlayed = (int)timeLimitManager.TimePlayed;
+                int currentRemainingSeconds = timeLimitManager.UnlimitedTime
+                    ? Math.Max(0, gameRules.RoundTime - timePlayed)
+                    : (int)Math.Max(0, Math.Ceiling(timeLimitManager.TimeRemaining));
+                int newRemainingSeconds = currentRemainingSeconds + (minutesToExtendBy * 60);
+                int newTotalSeconds = timePlayed + newRemainingSeconds;
+
+                gameRules.RoundTime = newTotalSeconds;
+
                 var gameRulesProxy = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First();
                 Utilities.SetStateChanged(gameRulesProxy, "CCSGameRulesProxy", "m_pGameRules");
                 
-                int newRemainingSeconds = gameRules.RoundTime - timePlayed;
-                
-                _timeLimitManager.TimeRemaining = newRemainingSeconds / 60M;
+                if (!timeLimitManager.UnlimitedTime)
+                    timeLimitManager.TimeRemaining = newTotalSeconds / 60M;
                 _pluginState.MapChangeScheduled = false;
                 _pluginState.EofVoteHappening = false;
                 
