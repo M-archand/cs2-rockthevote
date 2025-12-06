@@ -7,7 +7,7 @@ namespace cs2_rockthevote
     {
         public bool Enabled { get; set; } = true;
         public bool EnabledInWarmup { get; set; } = false;
-        public bool EnablePanorama { get; set; } = true;
+        public bool EnablePanorama { get; set; } = false;
         public int MinPlayers { get; set; } = 0;
         public int MinRounds { get; set; } = 0;
         public bool ChangeAtRoundEnd { get; set; } = false;
@@ -90,6 +90,7 @@ namespace cs2_rockthevote
 
     public class GeneralConfig
     {
+        public string AdminPermission { get; set; } = "@css/root";
         public int MaxMapExtensions { get; set; } = 2;
         public int RoundTimeExtension { get; set; } = 15;
         public int MapsInCoolDown { get; set; } = 3;
@@ -105,7 +106,7 @@ namespace cs2_rockthevote
     public class Config : BasePluginConfig, IBasePluginConfig
     {
         [JsonPropertyName("ConfigVersion")]
-        public override int Version { get; set; } = 19;
+        public override int Version { get; set; } = 20;
         public RtvConfig Rtv { get; set; } = new();
         public EndOfMapConfig EndOfMapVote { get; set; } = new();
         public NominateConfig Nominate { get; set; } = new();

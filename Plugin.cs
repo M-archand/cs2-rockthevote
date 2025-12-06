@@ -143,7 +143,7 @@ namespace cs2_rockthevote
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
         public void ReloadCommand(CCSPlayerController? player, CommandInfo command)
         {
-            string permission = "@css/root";
+            string permission = Config.General.AdminPermission;
 
             if (player != null && !AdminManager.PlayerHasPermissions(player, permission))
             {
