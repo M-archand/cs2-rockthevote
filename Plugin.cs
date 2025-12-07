@@ -35,6 +35,7 @@ namespace cs2_rockthevote
         VoteExtendRoundTimeCommand voteExtendRoundTime,
         TimeLeftCommand timeLeft,
         MaplistCommand maplistManager,
+        ReloadMapsCommand reloadMapsCommand,
         AFKManager afkManager,
         PluginState pluginState,
         IStringLocalizer stringLocalizer,
@@ -54,6 +55,7 @@ namespace cs2_rockthevote
         private readonly VoteExtendRoundTimeCommand _voteExtendRoundTime = voteExtendRoundTime;
         private readonly TimeLeftCommand _timeLeft = timeLeft;
         private readonly MaplistCommand _maplistManager = maplistManager;
+        private readonly ReloadMapsCommand _reloadMapsCommand = reloadMapsCommand;
         private readonly StringLocalizer _localizer = new(stringLocalizer, "rtv.prefix");
         private readonly ILogger<Plugin> _logger = logger;
         private readonly PluginState _pluginState = pluginState;
