@@ -144,6 +144,7 @@ namespace cs2_rockthevote
             try
             {
                 bool alwaysActive = _config.AlwaysActive;
+                bool usePanorama = _config.EnablePanorama && !alwaysActive;
 
                 if (player == null)
                     return;
@@ -191,7 +192,7 @@ namespace cs2_rockthevote
                 
                 Server.PrintToConsole($"[RockTheVote] RTV starting (caller: {Tag(player)}), IncludeAFK={_generalConfig.IncludeAFK}");
 
-                if (_config.EnablePanorama && !alwaysActive)
+                if (usePanorama)
                 {
                     PanoramaVote.Init();
                     Server.ExecuteCommand("sv_allow_votes 1");
@@ -244,7 +245,7 @@ namespace cs2_rockthevote
                     }
                 }
 
-                if (!_config.EnablePanorama || alwaysActive)
+                if (!usePanorama)
                 {
                     if (!_generalConfig.IncludeAFK)
                         _afk.CheckAllPlayers();
@@ -551,7 +552,9 @@ namespace cs2_rockthevote
             if (player?.UserId == null)
                 return;
 
-            if (!_config.EnablePanorama)
+            bool usePanorama = _config.EnablePanorama && !_config.AlwaysActive;
+
+            if (!usePanorama)
                 _voteManager?.RemoveVote(player.UserId.Value);
             else
                 PanoramaVote.RemovePlayerFromVote(player.Slot);
