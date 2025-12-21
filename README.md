@@ -64,7 +64,7 @@ General purpose map voting plugin.
 
 ```json
 {
-  "ConfigVersion": 20,
+  "ConfigVersion": 21,
   "Rtv": {
     "Enabled": true,
     "EnabledInWarmup": false,
@@ -102,8 +102,9 @@ General purpose map voting plugin.
     "IncludeExtendCurrentMap": true, # Include an option to extend the current map
     "EnableCountdown": false, # Whether the chat/hud countdown is enabled
     "CountdownType": "chat", # chat = prints to chat on an interval how much time is left in the vote. hud = persistent alert on the hud counting down as each second passes
-    "ChatCountdownInterval": 30 # If CountdownType = chat, how often we print to chat how much time is remaining to vote
-    "EnableHint": true # Shows a message in the center of the screen for 5 seconds notifying that the map vote has started
+    "ChatCountdownInterval": 30, # If CountdownType = chat, how often we print to chat how much time is remaining to vote
+    "EnableHint": true, # Shows a message in the center of the screen notifying that the map vote has started
+    "HintType": "csay" # csay = hud message in lower middle. GameHint = game instructor text in center middle
   },
   "Nominate": {
     "Enabled": true,
