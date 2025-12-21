@@ -496,6 +496,9 @@ namespace cs2_rockthevote
             if (_reminderTimer != null || !_config.AlwaysActive || !_config.AlwaysActiveReminder)
                 return;
 
+            if (_pluginState.MapChangeScheduled || _pluginState.EofVoteHappening)
+                return;
+
             if (_config.ReminderInterval <= 0)
                 return;
 
@@ -518,6 +521,12 @@ namespace cs2_rockthevote
         private void SendReminder()
         {
             if (_voteManager == null || !_config.AlwaysActive || !_config.AlwaysActiveReminder)
+            {
+                StopReminderTimer();
+                return;
+            }
+
+            if (_pluginState.MapChangeScheduled || _pluginState.EofVoteHappening)
             {
                 StopReminderTimer();
                 return;
