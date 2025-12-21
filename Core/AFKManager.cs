@@ -137,6 +137,20 @@ namespace cs2_rockthevote
             _afkPlayers.Clear();
         }
 
+        public bool MarkPlayerActive(CCSPlayerController player)
+        {
+            if (player == null || !player.IsValid || !player.ReallyValid())
+                return false;
+
+            _afkPlayers.Remove(player.Index);
+
+            var origin = player.PlayerPawn.Value?.CBodyComponent?.SceneNode?.AbsOrigin;
+            if (origin != null)
+                _lastOrigin[player.Index] = new Vector(origin.X, origin.Y, origin.Z);
+
+            return true;
+        }
+
         public bool IsAfk(CCSPlayerController player) => _afkPlayers.Contains(player.Index);
     }
 }

@@ -6,6 +6,7 @@ using CounterStrikeSharp.API.Modules.Utils;
 using CounterStrikeSharp.API.Modules.Timers;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 using Microsoft.Extensions.Logging;
+
 namespace cs2_rockthevote
 {
     public partial class Plugin
@@ -85,7 +86,10 @@ namespace cs2_rockthevote
             StopReminderTimer();
         }
 
-        private IEnumerable<CCSPlayerController> EligiblePlayers()
+        private bool TreatVotedPlayersAsActive() =>
+            _config.AlwaysActive && !_generalConfig.IncludeAFK;
+
+        private IEnumerable<CCSPlayerController> EligiblePlayers(bool countVotedIfAfk = false)
         {
             var players = ServerManager.ValidPlayers().Where(p => p.ReallyValid());
 
@@ -93,20 +97,40 @@ namespace cs2_rockthevote
             if (!_generalConfig.IncludeSpectator)
                 players = players.Where(p => p.Team != CsTeam.Spectator);
 
-            // Exclude AFK if configured
+            // Exclude AFK if configured, but allow already-voted players to stay eligible when requested
             if (!_generalConfig.IncludeAFK)
-                players = players.Where(p => !_afk.IsAfk(p));
+            {
+                HashSet<int>? voters = null;
+                if (countVotedIfAfk && _voteManager != null)
+                    voters = new HashSet<int>(_voteManager.Voters);
+
+                players = players.Where(p =>
+                {
+                    if (p.UserId == null)
+                        return false;
+
+                    if (voters != null && voters.Contains(p.UserId.Value))
+                        return true;
+
+                    return !_afk.IsAfk(p);
+                });
+            }
 
             return players;
         }
 
-        private int EligibleCount()
+        private int EligibleCount(bool countVotedIfAfk = false)
         {
-            return EligiblePlayers().Count();
+            return EligiblePlayers(countVotedIfAfk).Count();
         }
 
         private static string Tag(CCSPlayerController p)
             => $"{p.PlayerName} [slot {p.Slot}]";
+
+        private int RequiredYesVotes(int eligiblePlayers)
+        {
+            return (int)Math.Ceiling(eligiblePlayers * (_config.VotePercentage / 100.0));
+        }
 
         private void StartRtvTimer()
         {
@@ -247,8 +271,13 @@ namespace cs2_rockthevote
 
                 if (!usePanorama)
                 {
+                    bool countVotedAsActive = TreatVotedPlayersAsActive();
+
                     if (!_generalConfig.IncludeAFK)
+                    {
                         _afk.CheckAllPlayers();
+                        _afk.MarkPlayerActive(player);
+                    }
                     
                     // Block spectators from voting when excluded
                     if (!_generalConfig.IncludeSpectator && player.Team == CsTeam.Spectator)
@@ -258,20 +287,12 @@ namespace cs2_rockthevote
                         return;
                     }
 
-                    // Block AFK voters when excluded & tell them why
-                    if (!_generalConfig.IncludeAFK && _afk.IsAfk(player))
-                    {
-                        // "You were AFK when the vote was initiated. You can't participate in this vote."
-                        player.PrintToChat($"{_localizer.LocalizeWithPrefix("general.afk")}");
-                        return;
-                    }
+                    // Calculate AFK-aware required votes using active + already-voted players
+                    int eligible = Math.Max(EligibleCount(countVotedAsActive), 0);
+                    int requiredYesVotes = RequiredYesVotes(eligible);
 
-                    // Add the vote first
-                    VoteResult result = _voteManager!.AddVote(player.UserId!.Value);
-
-                    // Calculate AFK-aware required votes
-                    int eligible = Math.Max(EligibleCount(), 0);
-                    int requiredYesVotes = (int)Math.Ceiling(eligible * (_config.VotePercentage / 100.0));
+                    // Add the vote first with the current eligible pool
+                    VoteResult result = _voteManager!.AddVote(player.UserId!.Value, eligible);
 
                     switch (result.Result)
                     {
@@ -508,8 +529,9 @@ namespace cs2_rockthevote
                 return;
             }
 
-            int eligible = Math.Max(EligibleCount(), 0);
-            int requiredYesVotes = (int)Math.Ceiling(eligible * (_config.VotePercentage / 100.0));
+            bool countVotedAsActive = TreatVotedPlayersAsActive();
+            int eligible = Math.Max(EligibleCount(countVotedAsActive), 0);
+            int requiredYesVotes = RequiredYesVotes(eligible);
             int remaining = Math.Max(requiredYesVotes - _voteManager.VoteCount, 0);
 
             if (remaining <= 0)
