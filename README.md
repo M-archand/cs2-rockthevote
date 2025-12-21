@@ -25,7 +25,7 @@ General purpose map voting plugin.
  ![hudcountdown](https://github.com/user-attachments/assets/e1034f3c-340a-4d88-8d8a-96526f333fad)
  ![chatcountdown](https://github.com/user-attachments/assets/803826a1-665b-4ab7-9e38-fbb0e8d702be)
 
-- Panorama Vote (F1 = Yes, F2 = No) for !rtv & !voteextend
+- Panorama Vote (F1 = Yes, F2 = No) for !rtv & !voteextend (optional)
 
 ![panoramavote](https://github.com/user-attachments/assets/31ebe223-225f-4cef-812e-3bf6c56e590d)
 ![voteextend](https://github.com/user-attachments/assets/5cfd9a5f-36a5-4a11-ae26-3e74d5387251)
@@ -43,6 +43,8 @@ General purpose map voting plugin.
   
 ![mapscommand](https://github.com/user-attachments/assets/d4ab1377-0b29-45b6-bdaa-06b6a7664751)
 
+- !reloadmaps command. Rebuild the map list mid game
+- !reloadrtv command. Reload the rtv config mid game
 
 
 ## Requirements
@@ -57,12 +59,12 @@ General purpose map voting plugin.
 
 ## [ Configuration ]
 - A config file will be created in `addons/counterstrikesharp/configs/plugins/RockTheVote` the first time you load the plugin.
-- Changes in the config file will require you to reload the plugin or restart the server (changing the map won't work).
-- Maps that will be used in RTV/nominate/votemap/end of map vote are located in addons/counterstrikesharp/plugins/RockTheVote/maplist.txt
+- Changes in the config file will require you to reload the plugin, restart the server, or using !reloadrtv (changing the map won't work).
+- Maps that will be used in RTV/nominate/votemap/end of map vote are located in addons/counterstrikesharp/plugins/RockTheVote/maplist.txt This canbe updated mid-game using the command !reloadmaps
 
 ```json
 {
-  "ConfigVersion": 19,
+  "ConfigVersion": 20,
   "Rtv": {
     "Enabled": true,
     "EnabledInWarmup": false,
@@ -74,6 +76,9 @@ General purpose map voting plugin.
     "SoundEnabled": false, # true = play a sound when the end of map vote starts.
     "SoundPath": "sounds/vo/announcer/cs2_classic/felix_broken_fang_pick_1_map_tk01.vsnd_c",
     "MapsToShow": 6, # How many maps to show in the resulting map vote if the rtv passes
+    "AlwaysActive": true, # true = rtv vote is always running once triggered by an initional rtv. false = timed duration (RtvVoteDuration)
+	  "AlwaysActiveReminder": true, # true = print a reminder to chat at a given interval that an rtv vote is active, and how many more votes are required to pass
+	  "ReminderInterval": 120, # how often the reminder is printed to chat in seconds
     "RtvVoteDuration": 60, # How long the rtv vote lasts
     "MapVoteDuration": 60, # How long the resulting map vote will last
     "CooldownDuration": 180, # How many seconds must pass before another !rtv can be initiated
@@ -134,14 +139,16 @@ General purpose map voting plugin.
     "Permission": "@css/root,@css/changemap" # empty = anyone can use. "@css/vip" = only vip's can use (any perm allowed)
   },
   "General": {
+    "AdminPermission": "@css/root", # The permission required to use !reloadrtv or !reloadmaps
     "MaxMapExtensions": 2,
     "RoundTimeExtension": 15, # How long the extension will be in minutes for !VoteExtend or End of Map Vote extension
-    "MapsInCoolDown": 3, # How many recent maps that won't appear again in the End of Map Vote/can't be nominated.
+    "MapsInCoolDown": 3, # How many recent maps that won't appear again in the End of Map Vote/can't be nominated (0 = no cooldown, but current map is always in cooldown)
     "HideHudAfterVote": true, # Only applicable in MenuType = HudMenu. true = closes the hud after the player has voted
     "RandomStartMap": false, # true = a random map will be used when the server restarts. false = will use whatever you set in your startup command
     "IncludeSpectator": true, # true = spectators can vote (only applicable to !rtv). false = spectators can't vote
   	"IncludeAFK": false, # true = AFK players are included in the vote count (only applicable to !rtv). false = AFK players aren't included in the vote count
   	"AFKCheckInterval": 60, # how often an AFK check occurs in seconds (compares players coordinates between current and last check, also run again when the vote is initiated)
+    "EnableMapValidation": true, # true = the plugin will check if there are any workshop maps in your maplist.txt that are no longer on the workshop
     "DiscordWebhook": "" # blank = no alert. Discord Webhook added will alert you to any workshop maps in your maplist.txt that are no longer on the workshop
   }
 }
