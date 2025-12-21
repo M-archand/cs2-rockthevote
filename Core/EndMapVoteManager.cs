@@ -406,7 +406,18 @@ namespace cs2_rockthevote
 
             if (_endMapConfig.EnableHint)
             {
-                DisplayGameHintForAll(players, seconds: 5f);
+                var hintType = string.IsNullOrWhiteSpace(_endMapConfig.HintType)
+                    ? "GameHint"
+                    : _endMapConfig.HintType.Trim();
+                if (string.Equals(hintType, "csay", StringComparison.OrdinalIgnoreCase))
+                {
+                    var message = _localizer.Localize("emv.vote-started").Replace("\"", "'");
+                    Server.ExecuteCommand($"css_csay {message}");
+                }
+                else
+                {
+                    DisplayGameHintForAll(players, seconds: 5f);
+                }
             }
 
             ChatCountdown(isRtv ? _rtvConfig.MapVoteDuration : _endMapConfig.VoteDuration);

@@ -45,6 +45,7 @@ namespace cs2_rockthevote
         public string CountdownType { get; set; } = "chat";
         public int ChatCountdownInterval { get; set; } = 30;
         public bool EnableHint { get; set; } = false;
+        public string HintType { get; set; } = "GameHint";
     }
 
     public class VotemapConfig
