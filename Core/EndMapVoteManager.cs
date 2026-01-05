@@ -213,7 +213,7 @@ namespace cs2_rockthevote
         
         private void DisplayGameHintForAll(IEnumerable<CCSPlayerController> targets, float seconds = 5f)
         {
-            Server.ExecuteCommand("sv_gameinstructor_enable true");
+            Server.ExecuteCommand("sv_gameinstructor_disable false");
 
             string text = _localizer.Localize("emv.vote-started");
 
@@ -239,7 +239,7 @@ namespace cs2_rockthevote
 
             new Timer(seconds, () =>
             {
-                Server.ExecuteCommand("sv_gameinstructor_enable false");
+                Server.ExecuteCommand("sv_gameinstructor_disable true");
                 foreach (var p in targets)
                     if (p != null && p.IsValid)
                         p.ReplicateConVar("sv_gameinstructor_enable", "false");
@@ -278,7 +278,7 @@ namespace cs2_rockthevote
 
             new Timer(5f, () =>
             {
-                Server.ExecuteCommand("sv_gameinstructor_enable false");
+                Server.ExecuteCommand("sv_gameinstructor_disable true");
                 controller.ReplicateConVar("sv_gameinstructor_enable", "false");
             });
         }
