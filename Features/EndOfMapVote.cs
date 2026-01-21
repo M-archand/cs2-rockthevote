@@ -1,5 +1,4 @@
 ﻿using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Timers;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 using cs2_rockthevote.Core;
@@ -17,11 +16,7 @@ namespace cs2_rockthevote
         private EndMapVoteManager _voteManager = voteManager;
         private EndOfMapConfig _config = new();
         private Timer? _timer;
-        private bool DeathMatch => _gameMode?.GetPrimitiveValue<int>() == 2 && _gameType?.GetPrimitiveValue<int>() == 1;
-        private ConVar? _gameType;
-        private ConVar? _gameMode;
         private Plugin? _plugin;
-        private bool _hasInitializedTimer = false;
 
         bool CheckMaxRounds()
         {
@@ -82,37 +77,36 @@ namespace cs2_rockthevote
             _timer = null;
         }
 
+        void RestartTimer()
+        {
+            KillTimer();
+
+            if (_plugin is null || _timeLimit.UnlimitedTime || !_config.Enabled)
+                return;
+
+            if (_gameRules?.WarmupRunning == true || _pluginState.DisableCommands)
+                return;
+
+            _timer = _plugin.AddTimer(1.0F, () =>
+            {
+                if (_gameRules is not null && !_gameRules.WarmupRunning && !_pluginState.DisableCommands && _timeLimit.TimeRemaining > 0)
+                {
+                    if (CheckTimeLeft())
+                        StartVote();
+                }
+            }, TimerFlags.REPEAT);
+        }
+
         public void OnLoad(Plugin plugin)
         {
             _plugin = plugin;
-            _gameMode = ConVar.Find("game_mode");
-            _gameType = ConVar.Find("game_type");
-
-            void MaybeStartTimer()
-            {
-                KillTimer();
-                if (!_timeLimit.UnlimitedTime && _config.Enabled)
-                {
-                    _timer = plugin.AddTimer(1.0F, () =>
-                    {
-                        if (_gameRules is not null && !_gameRules.WarmupRunning && !_pluginState.DisableCommands && _timeLimit.TimeRemaining > 0)
-                        {
-                            if (CheckTimeLeft())
-                                StartVote();
-                        }
-                    }, TimerFlags.REPEAT);
-                }
-            }
 
             plugin.RegisterEventHandler<EventRoundStart>((ev, info) =>
             {
+                RestartTimer();
 
                 if (!_pluginState.DisableCommands && !_gameRules.WarmupRunning && CheckMaxRounds() && _config.Enabled)
                     StartVote();
-                else if (DeathMatch)
-                {
-                    MaybeStartTimer();
-                }
 
                 return HookResult.Continue;
             });
@@ -120,14 +114,7 @@ namespace cs2_rockthevote
 
             plugin.RegisterEventHandler<EventRoundAnnounceMatchStart>((ev, info) =>
             {
-                if (_hasInitializedTimer)
-                {
-                    MaybeStartTimer();
-                }
-                else
-                {
-                    _hasInitializedTimer = true;
-                }
+                RestartTimer();
                 return HookResult.Continue;
             });
         }
