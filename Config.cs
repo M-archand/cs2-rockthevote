@@ -101,13 +101,14 @@ namespace cs2_rockthevote
         public bool IncludeAFK { get; set; } = true;
         public int AFKCheckInterval { get; set; } = 30;
         public bool EnableMapValidation { get; set; } = true;
+        public string SteamApiKey { get; set; } = "";
         public string DiscordWebhook { get; set; } = "";
     }
 
     public class Config : BasePluginConfig, IBasePluginConfig
     {
         [JsonPropertyName("ConfigVersion")]
-        public override int Version { get; set; } = 21;
+        public override int Version { get; set; } = 22;
         public RtvConfig Rtv { get; set; } = new();
         public EndOfMapConfig EndOfMapVote { get; set; } = new();
         public NominateConfig Nominate { get; set; } = new();

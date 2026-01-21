@@ -64,7 +64,7 @@ General purpose map voting plugin.
 
 ```json
 {
-  "ConfigVersion": 21,
+  "ConfigVersion": 22,
   "Rtv": {
     "Enabled": true,
     "EnabledInWarmup": false,
@@ -150,6 +150,7 @@ General purpose map voting plugin.
   	"IncludeAFK": false, # true = AFK players are included in the vote count (only applicable to !rtv). false = AFK players aren't included in the vote count
   	"AFKCheckInterval": 60, # how often an AFK check occurs in seconds (compares players coordinates between current and last check, also run again when the vote is initiated)
     "EnableMapValidation": true, # true = the plugin will check if there are any workshop maps in your maplist.txt that are no longer on the workshop
+    "SteamApiKey": "", # blank = use 1 request/second HTML checks. Set to a Steam Web API key to batch validation requests (100 IDs per call) Get one here: https://steamcommunity.com/dev/apikey
     "DiscordWebhook": "" # blank = no alert. Discord Webhook added will alert you to any workshop maps in your maplist.txt that are no longer on the workshop
   }
 }
