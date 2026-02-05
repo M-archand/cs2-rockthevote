@@ -13,6 +13,7 @@ namespace cs2_rockthevote
         public bool ChangeAtRoundEnd { get; set; } = false;
         public int MapChangeDelay { get; set; } = 5;
         public bool SoundEnabled { get; set; } = false;
+        public float SoundVolume { get; set; } = 1.0F;
         public string SoundPath { get; set; } = "sounds/vo/announcer/cs2_classic/felix_broken_fang_pick_1_map_tk01.vsnd_c";
         public int MapsToShow { get; set; } = 6;
         public bool AlwaysActive { get; set; } = true;
@@ -36,6 +37,7 @@ namespace cs2_rockthevote
         public bool ChangeMapImmediately { get; set; } = false;
         public int VoteDuration { get; set; } = 150;
         public bool SoundEnabled { get; set; } = false;
+        public float SoundVolume { get; set; } = 1.0F;
         public string SoundPath { get; set; } = "sounds/vo/announcer/cs2_classic/felix_broken_fang_pick_1_map_tk01.vsnd_c";
         public int TriggerSecondsBeforeEnd { get; set; } = 180;
         public int TriggerRoundsBeforeEnd { get; set; } = 0;

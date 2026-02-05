@@ -76,6 +76,11 @@ namespace cs2_rockthevote
             _config = config.Rtv;
             _generalConfig = config.General;
             _voteManager = new AsyncVoteManager(_config.VotePercentage);
+
+            if (!uint.TryParse(_config.SoundPath, out _) && !SoundEventHelper.IsFullVolume(_config.SoundVolume))
+            {
+                _logger.LogWarning("RTV: To modify the sound volume (any value aside from 1) you need to use the soundevent_hash rather than the sound path");
+            }
         }
 
         public void OnMapStart(string map)
@@ -348,7 +353,7 @@ namespace cs2_rockthevote
 
                 if (_config.SoundEnabled)
                 {
-                    player.ExecuteClientCommand($"play {_config.SoundPath}");
+                    SoundEventHelper.PlaySound(player, _config.SoundPath, _config.SoundVolume);
                 }
             }
             catch (Exception ex)

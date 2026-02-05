@@ -78,6 +78,11 @@ namespace cs2_rockthevote
             _rtvConfig = config.Rtv;
             //_screenConfig = config.ScreenMenu;
 
+            if (!uint.TryParse(_endMapConfig.SoundPath, out _) && !SoundEventHelper.IsFullVolume(_endMapConfig.SoundVolume))
+            {
+                _logger.LogWarning("EndOfMapVote: To modify the sound volume (any value aside from 1) you need to use the soundevent_hash rather than the sound path");
+            }
+
             // Check to make sure VoteDuration isn't >= TriggerSecondsBeforeEnd, if it is, use a fallback
             if (_endMapConfig.VoteDuration >= _endMapConfig.TriggerSecondsBeforeEnd)
             {
@@ -398,7 +403,9 @@ namespace cs2_rockthevote
                 menu.Display(player, _endMapConfig.VoteDuration);
 
                 if (_endMapConfig.SoundEnabled)
-                    player.ExecuteClientCommand($"play {_endMapConfig.SoundPath}");
+                {
+                    SoundEventHelper.PlaySound(player, _endMapConfig.SoundPath, _endMapConfig.SoundVolume);
+                }
             }
 
             if (_endMapConfig.MenuType != "ChatMenu")
