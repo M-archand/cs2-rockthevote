@@ -36,9 +36,9 @@ namespace cs2_rockthevote
         public string MenuType { get; set; } = "WasdMenu";
         public bool ChangeMapImmediately { get; set; } = false;
         public int VoteDuration { get; set; } = 150;
-        public bool SoundEnabled { get; set; } = false;
-        public float SoundVolume { get; set; } = 1.0F;
-        public string SoundPath { get; set; } = "sounds/vo/announcer/cs2_classic/felix_broken_fang_pick_1_map_tk01.vsnd_c";
+        public bool SoundEnabled { get; set; } = true;
+        public float SoundVolume { get; set; } = 0.5F;
+        public string SoundPath { get; set; } = "1974266470";
         public int TriggerSecondsBeforeEnd { get; set; } = 180;
         public int TriggerRoundsBeforeEnd { get; set; } = 0;
         public float DelayToChangeInTheEnd { get; set; } = 0F;
@@ -110,7 +110,7 @@ namespace cs2_rockthevote
     public class Config : BasePluginConfig, IBasePluginConfig
     {
         [JsonPropertyName("ConfigVersion")]
-        public override int Version { get; set; } = 22;
+        public override int Version { get; set; } = 23;
         public RtvConfig Rtv { get; set; } = new();
         public EndOfMapConfig EndOfMapVote { get; set; } = new();
         public NominateConfig Nominate { get; set; } = new();
