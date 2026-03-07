@@ -79,7 +79,7 @@ namespace cs2_rockthevote
 
             if (!uint.TryParse(_config.SoundPath, out _) && !SoundEventHelper.IsFullVolume(_config.SoundVolume))
             {
-                _logger.LogWarning("RTV: To modify the sound volume (any value aside from 1) you need to use the soundevent_hash rather than the sound path");
+                _logger.LogWarning("To modify the sound volume (any value aside from 1) you need to use the soundevent_hash rather than the sound path. E.g. 1974266470 for felix_broken_fang_pick_1_map_tk01");
             }
         }
 

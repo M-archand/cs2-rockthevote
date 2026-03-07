@@ -106,7 +106,7 @@ namespace cs2_rockthevote
                     _logger.LogError($"[Map-Checker] ERROR checking {map.Name}: {ex.Message}");
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(1)).ConfigureAwait(false); // 1 request per second without an API key to avoid rate limiting
+                await Task.Delay(TimeSpan.FromSeconds(1)).ConfigureAwait(false); // avoid rate limiting when using html
             }
         }
 
@@ -148,12 +148,41 @@ namespace cs2_rockthevote
 
                     foreach (var detail in details)
                     {
-                        if (detail.Result == 1)
-                            continue;
-
                         if (!ulong.TryParse(detail.PublishedFileId, out var detailId))
                         {
                             _logger.LogError($"[Map-Checker] Unexpected publishedfileid value in Steam Web API response: \"{detail.PublishedFileId}\"");
+                            continue;
+                        }
+
+                        if (detail.Result == 1)
+                            continue;
+
+                        if (detail.Visibility == (int)PublishedFileVisibility.Unlisted)
+                        {
+                            var mapNames = string.Join(", ", batch
+                                .Where(b => b.PublishedFileId == detailId)
+                                .Select(b => b.Map.Name)
+                                .Distinct());
+                            var mapLabel = string.IsNullOrWhiteSpace(mapNames) ? "Unknown map" : mapNames;
+                            _logger.LogInformation($"[Map-Checker] {mapLabel}:{detailId} is unlisted; skipping missing check");
+                            continue;
+                        }
+
+                        bool exists;
+                        try
+                        {
+                            exists = await DoesWorkshopItemExistAsync(detailId).ConfigureAwait(false);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError($"[Map-Checker] ERROR double-checking {detailId} via HTML: {ex.Message}");
+                            exists = false;
+                        }
+
+                        if (exists)
+                        {
+                            _logger.LogInformation($"[Map-Checker] {detailId} returned non-OK from Steam Web API but is accessible; skipping missing");
+                            await Task.Delay(TimeSpan.FromSeconds(2)).ConfigureAwait(false); // avoid rate limiting for html checks
                             continue;
                         }
 
@@ -161,6 +190,8 @@ namespace cs2_rockthevote
                         {
                             await HandleMissingMapAsync(missing.Map, missing.PublishedFileId).ConfigureAwait(false);
                         }
+
+                        await Task.Delay(TimeSpan.FromSeconds(2)).ConfigureAwait(false);
                     }
                 }
                 catch (Exception ex)
@@ -220,6 +251,17 @@ namespace cs2_rockthevote
 
             [JsonPropertyName("publishedfileid")]
             public string PublishedFileId { get; set; } = "";
+
+            [JsonPropertyName("visibility")]
+            public int Visibility { get; set; }
+        }
+
+        private enum PublishedFileVisibility
+        {
+            Public = 0,
+            FriendsOnly = 1,
+            Private = 2,
+            Unlisted = 3
         }
     }
 }
