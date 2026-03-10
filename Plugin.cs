@@ -10,7 +10,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Localization;
 using CS2MenuManager.API.Class;
-using CounterStrikeSharp.API.Modules.Events;
 
 namespace cs2_rockthevote
 {
@@ -110,8 +109,8 @@ namespace cs2_rockthevote
             Config = config;
             _dependencyManager.OnConfigParsed(config);
 
-            if (config.Version < Config.Version)
-                Logger.LogWarning("Configuration version mismatch (Expected: {ExpectedVersion} | Current: {CurrentVersion})", Config.Version, config.Version);
+            if (config.Version != Config.CurrentVersion)
+                Logger.LogWarning("Configuration version mismatch (Expected: {ExpectedVersion} | Current: {CurrentVersion})", Config.CurrentVersion, config.Version);
         }
 
         /*
