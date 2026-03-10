@@ -32,6 +32,7 @@ namespace cs2_rockthevote
     public class EndOfMapConfig
     {
         public bool Enabled { get; set; } = true;
+        public bool EnableRevote {get; set; } = false;
         public int MapsToShow { get; set; } = 6;
         public string MenuType { get; set; } = "WasdMenu";
         public bool ChangeMapImmediately { get; set; } = false;
@@ -46,6 +47,8 @@ namespace cs2_rockthevote
         public bool EnableCountdown { get; set; } = false;
         public string CountdownType { get; set; } = "chat";
         public int ChatCountdownInterval { get; set; } = 30;
+        public bool ChatMapChoiceReminder { get; set; } = true;
+        public int ChatMapChoiceInterval { get; set; } = 30;
         public bool EnableHint { get; set; } = false;
         public string HintType { get; set; } = "GameHint";
     }
