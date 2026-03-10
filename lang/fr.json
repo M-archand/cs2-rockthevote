@@ -74,6 +74,7 @@
   "emv.game-instructor": "Votez pour la prochaine carte dans le chat !",
   "emv.hud.timer": "Votez pour la prochaine carte: {0}s",
   "emv.hud.finished": "Vote terminé, prochaine carte: {0}",
+  "emv.revote": "Tapez {lightred}!revote {default}pour changer votre vote.",
   
   "nextmap": "La prochaine carte sera {green}{0}",
   "nextmap.decided-by-vote": "La prochaine carte sera décidée par vote"

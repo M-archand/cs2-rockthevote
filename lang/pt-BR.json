@@ -74,6 +74,7 @@
   "emv.game-instructor": "Vote no próximo mapa pelo chat!",
   "emv.hud.timer": "Votar no próximo mapa: {0}s",
   "emv.hud.finished": "Votação concluída, próximo mapa: {0}",
+  "emv.revote": "Digite {lightred}!revote {default}para alterar seu voto.",
 
   "nextmap": "O próximo mapa será {green}{0}",
   "nextmap.decided-by-vote": "O próximo mapa será decidido por votação"

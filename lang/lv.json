@@ -74,6 +74,7 @@
   "emv.game-instructor": "Balso par nākamo karti čatā!",
   "emv.hud.timer": "Balsojiet par nākamo karti: {0}s",
   "emv.hud.finished": "Balsošana pabeigta, nākamā karte: {0}",
+  "emv.revote": "Ieraksti {lightred}!revote {default}, lai mainītu savu balsi.",
 
   "nextmap": "Nākamā karte būs {zaļa}{0}",
   "nextmap.decided-by-vote": "Nākamā karte tiks noteikta balsojot"

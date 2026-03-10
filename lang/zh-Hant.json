@@ -74,6 +74,7 @@
   "emv.game-instructor": "在聊天中投票選擇下一張地圖！",
   "emv.hud.timer": "投票選擇下一張地圖：{0} 秒",
   "emv.hud.finished": "投票結束，下一張地圖：{0}",
+  "emv.revote": "輸入 {lightred}!revote {default} 以更改你的投票。",
 
   "nextmap": "下一張地圖將會是 {green}{0}",
   "nextmap.decided-by-vote": "下一張地圖將由投票決定"

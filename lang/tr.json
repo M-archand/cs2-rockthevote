@@ -74,6 +74,7 @@
   "emv.game-instructor": "Sonraki harita için sohbette oy ver!",
   "emv.hud.timer": "Bir sonraki harita için oy verin: {0}s",
   "emv.hud.finished": "Oylama sona erdi, bir sonraki harita: {0}",
+  "emv.revote": "Oyunuzu değiştirmek için {lightred}!revote {default}yazın.",
 
   "nextmap": "Bir sonraki harita {green}{0} olacak",
   "nextmap.decided-by-vote": "Bir sonraki harita oy"

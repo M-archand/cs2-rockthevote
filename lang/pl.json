@@ -74,6 +74,7 @@
   "emv.game-instructor": "Głosuj na następną mapę na czacie!",
   "emv.hud.timer": "Głosuj na następną mapę: {0}s",
   "emv.hud.finished": "Głosowanie zakończone, następna mapa: {0}",
+  "emv.revote": "Wpisz {lightred}!revote {default}, aby zmienić swój głos.",
 
   "nextmap": "Następna mapa będzie {zielona}{0}",
   "nextmap.decided-by-vote": "Następna mapa zostanie wybrana w głosowaniu"

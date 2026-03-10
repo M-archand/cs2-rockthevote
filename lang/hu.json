@@ -74,6 +74,7 @@
   "emv.game-instructor": "Szavazz a következő pályára a chaten!",
   "emv.hud.timer": "Szavazás a következő pályára: {0}",
   "emv.hud.finished": "Szavazás befejezve, következő pálya: {0}",
+  "emv.revote": "Írd be: {lightred}!revote {default}a szavazatod módosításához.",
 
   "nextmap": "A következő pálya {zöld}{0} lesz",
   "nextmap.decided-by-vote": "A következő pályáról szavazással döntünk"
