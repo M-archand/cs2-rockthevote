@@ -29,6 +29,7 @@ namespace cs2_rockthevote
         private Timer? Timer;
         private Timer? _nextVoteTimer;
         private Timer? _chatMapChoiceTimer;
+        private Timer? _roundEndChangeTimer;
         List<string> mapsElected = new();
         private readonly Dictionary<int, string> _playerVotes = new();
         private readonly List<string> _currentVoteOptions = new();
@@ -128,6 +129,12 @@ namespace cs2_rockthevote
         {
             _chatMapChoiceTimer?.Kill();
             _chatMapChoiceTimer = null;
+        }
+
+        private void KillRoundEndChangeTimer()
+        {
+            _roundEndChangeTimer?.Kill();
+            _roundEndChangeTimer = null;
         }
 
         private bool ShouldPrintChatMapChoices()
@@ -280,6 +287,7 @@ namespace cs2_rockthevote
         {
             TimeLeft = -1;
             KillChatMapChoiceTimer();
+            KillRoundEndChangeTimer();
             if (Timer is not null)
             {
                 Timer!.Kill();
@@ -374,6 +382,9 @@ namespace cs2_rockthevote
 
         private void ShowHudInstructorHint(CCSPlayerController controller, string text, float seconds, string iconOnScreen, string iconOffScreen, string bindingCmd, Color color, float iconHeightOffset = 0f)
         {
+            if (!controller.IsValid)
+                return;
+
             var pawn = controller.PlayerPawn?.Value;
             if (pawn is null || !pawn.IsValid)
                 return;
@@ -402,11 +413,13 @@ namespace cs2_rockthevote
             if (seconds > 0)
                 RemoveEntity(hint, seconds + 0.25f);
 
-            new Timer(5f, () =>
+            _plugin?.AddTimer(5f, () =>
             {
                 Server.ExecuteCommand("sv_gameinstructor_disable true");
-                controller.ReplicateConVar("sv_gameinstructor_enable", "false");
-            });
+
+                if (controller.IsValid)
+                    controller.ReplicateConVar("sv_gameinstructor_enable", "false");
+            }, TimerFlags.STOP_ON_MAPCHANGE);
         }
 
         private void RemoveEntity(CEnvInstructorHint entity, float time = 0.0f)
@@ -550,18 +563,18 @@ namespace cs2_rockthevote
 
         public void EndVote(bool isRtv)
         {
-            /*foreach (var player in ServerManager.ValidPlayers())
+            foreach (var player in ServerManager.ValidPlayers())
             {
                 if (player.IsValid)
-                {
-                    MapVoteScreenMenu.Close(player);
-                }
-            }*/
-            
+                    MenuManager.CloseActiveMenu(player);
+            }
+
             KillTimer();
             _currentVoteOptions.Clear();
             
-            bool mapEnd = !isRtv && !_endMapConfig.ChangeMapImmediately;
+            MapChangeTrigger trigger = !isRtv && !_endMapConfig.ChangeMapImmediately
+                ? MapChangeTrigger.MatchEnd
+                : MapChangeTrigger.RoundStart;
             string extendOption = _localizer.Localize("extendtime.list-name");
             
             decimal totalVotes = Votes.Select(x => x.Value).Sum();
@@ -612,30 +625,38 @@ namespace cs2_rockthevote
             }
             else
             {
-                _changeMapManager.ScheduleMapChange(winner.Key, mapEnd: mapEnd);
+                _changeMapManager.ScheduleMapChange(winner.Key, trigger: trigger);
 
                 if (!isRtv)
                 {
                     if (_endMapConfig.ChangeMapImmediately)
                     {
-                        _changeMapManager.ChangeNextMap(mapEnd);
+                        _changeMapManager.ChangeNextMap();
                     }
                     else
                     {
-                        if (!mapEnd)
+                        if (trigger != MapChangeTrigger.MatchEnd)
                             Server.PrintToChatAll(_localizer.LocalizeWithPrefix("general.changing-map-next-round", winner.Key));
 
                         var ignoreRoundWinConditions = ConVar.Find("mp_ignore_round_win_conditions");
                         if (ignoreRoundWinConditions?.GetPrimitiveValue<bool>() == true)
                         {
-                            Timer? checkTimer = null;
-                            checkTimer = _plugin?.AddTimer(1.0F, () =>
+                            KillRoundEndChangeTimer();
+                            _roundEndChangeTimer = _plugin?.AddTimer(1.0F, () =>
                             {
-                                int remainingSeconds = (int)(_gameRules.RoundTime - (Server.CurrentTime - _gameRules.GameStartTime));
+                                float roundDuration = _gameRules.RoundTime;
+                                float roundStartTime = _gameRules.RoundStartTime;
+                                if (roundDuration <= 0 || roundStartTime <= 0)
+                                    return;
+
+                                int remainingSeconds = (int)Math.Ceiling(
+                                    Math.Max(0, roundDuration - (Server.CurrentTime - roundStartTime))
+                                );
+
                                 if (remainingSeconds <= 3)
                                 {
-                                    _changeMapManager.ChangeNextMap(mapEnd);
-                                    checkTimer?.Kill();
+                                    _changeMapManager.ChangeNextMap();
+                                    KillRoundEndChangeTimer();
                                 }
                             }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
                         }
@@ -648,19 +669,18 @@ namespace cs2_rockthevote
                         var delay = _rtvConfig.MapChangeDelay;
                         if (delay <= 0) // Immediate
                         {
-                            _changeMapManager.ChangeNextMap(mapEnd);
+                            _changeMapManager.ChangeNextMap();
                         }
                         else // Timer for MapChangeDelay seconds
                         {
                             _plugin?.AddTimer(delay, () =>
                             {
-                                _changeMapManager.ChangeNextMap(mapEnd);
+                                _changeMapManager.ChangeNextMap();
                             }, TimerFlags.STOP_ON_MAPCHANGE);
                         }
                     }
                     else
                     {
-                        _changeMapManager.ChangeNextMap(mapEnd: true);
                         Server.PrintToChatAll(_localizer.LocalizeWithPrefix("general.changing-map-next-round", winner.Key));
                     }
                 }

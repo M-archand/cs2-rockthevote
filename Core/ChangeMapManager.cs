@@ -6,19 +6,18 @@ using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
 namespace cs2_rockthevote
 {
+    public enum MapChangeTrigger
+    {
+        RoundStart,
+        MatchEnd
+    }
+
     public partial class Plugin
     {
         [GameEventHandler(HookMode.Post)]
-        public HookResult OnRoundEndMapChanger(EventRoundEnd @event, GameEventInfo info)
-        {
-            _changeMapManager.ChangeNextMap();
-            return HookResult.Continue;
-        }
-
-        [GameEventHandler(HookMode.Post)]
         public HookResult OnRoundStartMapChanger(EventRoundStart @event, GameEventInfo info)
         {
-            _changeMapManager.ChangeNextMap();
+            _changeMapManager.ChangeNextMap(MapChangeTrigger.RoundStart);
             return HookResult.Continue;
         }
     }
@@ -33,11 +32,13 @@ namespace cs2_rockthevote
         public string? NextMap { get; private set; } = null;
         private string _prefix = DEFAULT_PREFIX;
         private const string DEFAULT_PREFIX = "rtv.prefix";
-        private bool _mapEnd = false;
+        private MapChangeTrigger _changeTrigger = MapChangeTrigger.RoundStart;
 
         private Map[] _maps = new Map[0];
         private Config? _config;
 
+        private Timer? _pendingMapChangeTimer;
+        private Timer? _winPanelDelayTimer;
         private Timer? _mapChangeVerifyTimer;
 
         public ChangeMapManager(StringLocalizer localizer, PluginState pluginState, MapLister mapLister)
@@ -54,30 +55,43 @@ namespace cs2_rockthevote
         }
 
 
-        public void ScheduleMapChange(string map, bool mapEnd = false, string prefix = DEFAULT_PREFIX)
+        public void ScheduleMapChange(string map, MapChangeTrigger trigger = MapChangeTrigger.RoundStart, string prefix = DEFAULT_PREFIX)
         {
             NextMap = map;
             _prefix = prefix;
             _pluginState.MapChangeScheduled = true;
-            _mapEnd = mapEnd;
+            _changeTrigger = trigger;
         }
 
         public void OnMapStart(string _map)
         {
             NextMap = null;
             _prefix = DEFAULT_PREFIX;
+            _changeTrigger = MapChangeTrigger.RoundStart;
 
+            _pendingMapChangeTimer?.Kill();
+            _pendingMapChangeTimer = null;
+            _winPanelDelayTimer?.Kill();
+            _winPanelDelayTimer = null;
             _mapChangeVerifyTimer?.Kill();
             _mapChangeVerifyTimer = null;
         }
 
-        public bool ChangeNextMap(bool mapEnd = false)
+        public bool ChangeNextMap(MapChangeTrigger trigger)
         {
-            if (mapEnd != _mapEnd)
+            if (trigger != _changeTrigger)
                 return false;
 
+            return ChangeNextMap();
+        }
+
+        public bool ChangeNextMap()
+        {
             if (!_pluginState.MapChangeScheduled)
                 return false;
+
+            if (_pendingMapChangeTimer is not null)
+                return true;
 
             Map? map = _maps.FirstOrDefault(x => string.Equals(x.Name, NextMap, StringComparison.OrdinalIgnoreCase));
             if (map == null)
@@ -86,15 +100,16 @@ namespace cs2_rockthevote
                 return false;
             }
 
-            _pluginState.MapChangeScheduled = false;
-
             Server.PrintToChatAll(_localizer.LocalizeWithPrefixInternal(_prefix, "general.changing-map", map.Name));
 
             string mapBefore = Server.MapName ?? string.Empty;
 
 
-            _plugin?.AddTimer(3.0F, () =>
+            _pendingMapChangeTimer = _plugin?.AddTimer(3.0F, () =>
             {
+                _pendingMapChangeTimer = null;
+                _pluginState.MapChangeScheduled = false;
+
                 if (Server.IsMapValid(map.Name))
                 {
                     Server.ExecuteCommand($"changelevel {map.Name}");
@@ -161,7 +176,7 @@ namespace cs2_rockthevote
                         Server.PrintToConsole($"[RTV] Fallback map change check error: {ex.Message}");
                     }
                 }, TimerFlags.STOP_ON_MAPCHANGE); // auto-kill if the map did change
-            });
+            }, TimerFlags.STOP_ON_MAPCHANGE);
 
             return true;
         }
@@ -182,10 +197,12 @@ namespace cs2_rockthevote
                     if (delay < 0)
                         delay = 0;
 
-                    _plugin?.AddTimer(delay, () =>
+                    _winPanelDelayTimer?.Kill();
+                    _winPanelDelayTimer = _plugin?.AddTimer(delay, () =>
                     {
-                        ChangeNextMap(true);
-                    });
+                        _winPanelDelayTimer = null;
+                        ChangeNextMap(MapChangeTrigger.MatchEnd);
+                    }, TimerFlags.STOP_ON_MAPCHANGE);
                 }
                 return HookResult.Continue;
             });

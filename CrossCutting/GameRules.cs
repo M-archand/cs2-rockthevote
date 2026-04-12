@@ -26,6 +26,7 @@ namespace cs2_rockthevote
         }
 
         public float GameStartTime => _gameRules?.GameStartTime ?? 0;
+        public float RoundStartTime => _gameRules?.RoundStartTime ?? 0;
 
         public void OnMapStart(string map)
         {

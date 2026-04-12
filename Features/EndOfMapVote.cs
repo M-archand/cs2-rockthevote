@@ -94,7 +94,7 @@ namespace cs2_rockthevote
                     if (CheckTimeLeft())
                         StartVote();
                 }
-            }, TimerFlags.REPEAT);
+            }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
         }
 
         public void OnLoad(Plugin plugin)
