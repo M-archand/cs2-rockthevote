@@ -8,8 +8,6 @@ namespace cs2_rockthevote
 {
     public partial class Plugin
     {
-        [ConsoleCommand("css_maps",   "Displays the available maps in console")]
-        [ConsoleCommand("css_maplist","Displays the available maps in console")]
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
         public void OnMaplistCommand(CCSPlayerController? player, CommandInfo command)
         {

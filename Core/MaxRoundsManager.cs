@@ -113,8 +113,6 @@ namespace cs2_rockthevote
                 _lastBeforeHalf = false;
                 return HookResult.Continue;
             });
-
-
             plugin.RegisterEventHandler<EventRoundAnnounceLastRoundHalf>((@event, info) =>
             {
                 if (@event is null)
@@ -123,8 +121,6 @@ namespace cs2_rockthevote
                 _lastBeforeHalf = true;
                 return HookResult.Continue;
             });
-
-
             plugin.RegisterEventHandler<EventRoundAnnounceMatchStart>((@event, info) =>
             {
                 if (@event is null)

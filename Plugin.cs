@@ -3,13 +3,14 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using static CounterStrikeSharp.API.Core.Listeners;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Events;
 using CounterStrikeSharp.API.Modules.Utils;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Extensions;
+using CS2MenuManager.API.Class;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Localization;
-using CS2MenuManager.API.Class;
 
 namespace cs2_rockthevote
 {
@@ -21,7 +22,7 @@ namespace cs2_rockthevote
             var di = new DependencyManager<Plugin, Config>();
             di.LoadDependencies(typeof(Plugin).Assembly);
             di.AddIt(serviceCollection);
-            serviceCollection.AddScoped<StringLocalizer>();
+            serviceCollection.AddSingleton<StringLocalizer>();
         }
     }
 
@@ -73,11 +74,9 @@ namespace cs2_rockthevote
             _dependencyManager.OnPluginLoad(this);
             RegisterListener<OnMapStart>(_dependencyManager.OnMapStart);
 
-            RegisterEventHandler<EventVoteCast>((ev, info) =>
-            {
-                PanoramaVote.VoteCast(ev);
-                return HookResult.Continue;
-            });
+            RegisterPluginCommandsAndEvents();
+
+            RegisterStartupEvent<EventVoteCast>(OnVoteCast);
         }
         
         public override void OnAllPluginsLoaded(bool hotReload)
@@ -85,18 +84,21 @@ namespace cs2_rockthevote
             // Check for CS2MenuManager installation
             try
             {
-                var dummy = MenuManager.MenuTypesList;
-                _hasMenuManager = true;
+                _hasMenuManager = MenuManager.MenuTypesList.Count > 0;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 _hasMenuManager = false;
-                Server.PrintToConsole("CS2MenuManager API not found! It is required to use RockTheVote. Download it from here: https://github.com/schwarper/CS2MenuManager");
-                Logger.LogWarning("CS2MenuManager API not found! It is required to use RockTheVote. Download it from here: https://github.com/schwarper/CS2MenuManager");
+                _logger.LogWarning(ex, "CS2MenuManager detection failed during OnAllPluginsLoaded.");
             }
 
-            if (_hasMenuManager)
-                 Server.PrintToConsole("CS2MenuManager API detected; RTV menu features enabled!");
+            if (!_hasMenuManager)
+            {
+                Server.PrintToConsole("CS2MenuManager API not found! It is required to use RockTheVote. Download it from here: https://github.com/schwarper/CS2MenuManager");
+                Logger.LogWarning("CS2MenuManager API not found! It is required to use RockTheVote. Download it from here: https://github.com/schwarper/CS2MenuManager");
+                return;
+            }
+
         }
         
         public override void Unload(bool hotReload)
@@ -140,7 +142,6 @@ namespace cs2_rockthevote
         }
         */
 
-        [ConsoleCommand("css_reloadrtv", "Reloads the RTV config.")]
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
         public void ReloadCommand(CCSPlayerController? player, CommandInfo command)
         {
@@ -161,6 +162,45 @@ namespace cs2_rockthevote
             {
                 command.ReplyToCommand($"Failed to reload configuration: {ex.Message}");
             }
+        }
+
+        private HookResult OnVoteCast(EventVoteCast @event, GameEventInfo info)
+        {
+            PanoramaVote.VoteCast(@event);
+            return HookResult.Continue;
+        }
+
+        private void RegisterPluginCommandsAndEvents()
+        {
+            RegisterStartupCommand("css_reloadrtv", "Reloads the RTV config.", ReloadCommand);
+            RegisterStartupCommand("css_rtv", "Votes to rock the vote", OnRTV);
+            RegisterStartupCommand("css_reloadmaps", "Reloads the map list from maplist.txt.", OnReloadMapsCommand);
+            RegisterStartupCommand("css_nom", "Nominate a map to appear in the vote.", OnNominateCommand);
+            RegisterStartupCommand("css_nominate", "Nominate a map to appear in the vote.", OnNominateCommand);
+            RegisterStartupCommand("css_voteextend", "Extends time for the current map", OnVoteExtendRoundTimeCommand);
+            RegisterStartupCommand("css_ve", "Extends time for the current map", OnVoteExtendRoundTimeCommand);
+            RegisterStartupCommand("css_timeleft", "Prints in the chat the timeleft in the current map", OnTimeLeft);
+            RegisterStartupCommand("css_maps", "Displays the available maps in console", OnMaplistCommand);
+            RegisterStartupCommand("css_maplist", "Displays the available maps in console", OnMaplistCommand);
+            RegisterStartupCommand("css_extend", "Extends time for the current map", OnExtendRoundTimeCommand);
+            RegisterStartupCommand("css_votemap", "Vote to change to a map", OnVotemap);
+
+            RegisterStartupEvent<EventPlayerDisconnect>(EventPlayerDisconnectRTV, HookMode.Pre);
+            RegisterStartupEvent<EventPlayerDisconnect>(EventPlayerDisconnectNominate, HookMode.Pre);
+            RegisterStartupEvent<EventPlayerDisconnect>(EventPlayerDisconnectExtend, HookMode.Pre);
+            RegisterStartupEvent<EventPlayerDisconnect>(EventPlayerDisconnectVotemap, HookMode.Pre);
+            RegisterStartupEvent<EventPlayerSpawn>(EventPlayerSpawn, HookMode.Pre);
+            RegisterStartupEvent<EventRoundStart>(OnRoundStartMapChanger, HookMode.Post);
+        }
+
+        private void RegisterStartupCommand(string name, string description, CommandInfo.CommandCallback callback)
+        {
+            AddCommand(name, description, callback);
+        }
+
+        private void RegisterStartupEvent<T>(GameEventHandler<T> handler, HookMode hookMode = HookMode.Post) where T : GameEvent
+        {
+            RegisterEventHandler(handler, hookMode);
         }
     }
 }

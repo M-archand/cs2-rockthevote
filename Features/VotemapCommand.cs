@@ -4,7 +4,6 @@ using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Utils;
 using CounterStrikeSharp.API.Modules.Commands;
-using CS2MenuManager.API.Interface;
 using CS2MenuManager.API.Enum;
 using CS2MenuManager.API.Class; 
 using cs2_rockthevote.Core;
@@ -15,7 +14,6 @@ namespace cs2_rockthevote
 {
     public partial class Plugin
     {
-        [ConsoleCommand("css_votemap", "Vote to change to a map")]
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
         public void OnVotemap(CCSPlayerController? player, CommandInfo command)
         {
@@ -36,7 +34,6 @@ namespace cs2_rockthevote
             _votemapManager.CommandHandler(player, map);
         }
 
-        [GameEventHandler(HookMode.Pre)]
         public HookResult EventPlayerDisconnectVotemap(EventPlayerDisconnect @event, GameEventInfo @eventInfo)
         {
             var player = @event.Userid;
@@ -59,7 +56,6 @@ namespace cs2_rockthevote
         private PluginState _pluginState;
         private MapCooldown _mapCooldown;
         private MapLister _mapLister;
-        private IMenu? _votemapMenu;
         private Plugin? _plugin;
         private Dictionary<string, AsyncVoteManager> VotedMaps = new Dictionary<string, AsyncVoteManager>();
 
@@ -73,7 +69,6 @@ namespace cs2_rockthevote
             _mapCooldown = mapCooldown;
             _endOfMapVote = endOfMapVote;
             _logger = logger;
-            _mapCooldown.EventCooldownRefreshed += OnMapsLoaded;
         }
 
         public void OnMapStart(string map)
@@ -96,31 +91,6 @@ namespace cs2_rockthevote
         public void OnLoad(Plugin plugin)
         {
             _plugin = plugin;
-        }
-
-        public void OnMapsLoaded(object? sender, Map[] maps)
-        {
-            var title = _localizer.Localize("general.choose.map");
-
-            var key = _config.MenuType?.Trim() ?? "";
-            var menuType = MenuManager.MenuTypesList.TryGetValue(key, out var resolvedType)
-                ? resolvedType
-                : MenuTypeManager.GetDefaultMenu();
-
-            _votemapMenu = MenuManager.MenuByType(menuType, title, _plugin!);
-
-            foreach (var m in _mapLister.Maps!.Where(x => x.Name != Server.MapName))
-            {
-                bool isCooldown = _mapCooldown.IsMapInCooldown(m.Name);
-                string label = isCooldown ? $"{ChatColors.Grey}{m.Name}" : m.Name;
-                string chosen = m.Name;
-
-                _votemapMenu.AddItem(
-                    label,
-                    (player, _) => { if (!isCooldown) AddVote(player, chosen); },
-                    isCooldown ? DisableOption.DisableShowNumber : DisableOption.None
-                );
-            }
         }
 
         public void CommandHandler(CCSPlayerController? player, string map)

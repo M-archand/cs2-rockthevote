@@ -11,7 +11,6 @@ namespace cs2_rockthevote
 {
     public partial class Plugin
     {
-        [ConsoleCommand("css_rtv", "Votes to rock the vote")]
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
         public void OnRTV(CCSPlayerController? player, CommandInfo? command)
         {
@@ -21,7 +20,6 @@ namespace cs2_rockthevote
             _rtvManager.CommandHandler(player);
         }
 
-        [GameEventHandler(HookMode.Pre)]
         public HookResult EventPlayerDisconnectRTV(EventPlayerDisconnect @event, GameEventInfo @eventInfo)
         {
             var player = @event.Userid;

@@ -14,8 +14,6 @@ namespace cs2_rockthevote
 {
     public partial class Plugin
     {
-        [ConsoleCommand("css_nom", "Nominate a map to appear in the vote.")]
-        [ConsoleCommand("css_nominate", "Nominate a map to appear in the vote.")]
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
         public void OnNominateCommand(CCSPlayerController? player, CommandInfo command)
         {
@@ -35,7 +33,6 @@ namespace cs2_rockthevote
             _nominationManager.CommandHandler(player, command.GetArg(1)?.Trim().ToLower() ?? "");
         }
 
-        [GameEventHandler(HookMode.Pre)]
         public HookResult EventPlayerDisconnectNominate(EventPlayerDisconnect @event, GameEventInfo @eventInfo)
         {
             var player = @event.Userid;
@@ -51,7 +48,6 @@ namespace cs2_rockthevote
     {
         private readonly ILogger<NominationCommand> _logger;
         Dictionary<int, List<string>> Nominations = new();
-        private ChatMenu? _nominationMenu;
         private NominateConfig _nomConfig = new();
         private GameRules _gamerules;
         private StringLocalizer _localizer;
@@ -63,13 +59,11 @@ namespace cs2_rockthevote
         public NominationCommand(MapLister mapLister, GameRules gamerules, StringLocalizer localizer, PluginState pluginState, MapCooldown mapCooldown, ILogger<NominationCommand> logger)
         {
             _mapLister = mapLister;
-            _mapLister.EventMapsLoaded += OnMapsLoaded;
             _gamerules = gamerules;
             _localizer = localizer;
             _pluginState = pluginState;
             _mapCooldown = mapCooldown;
             _logger = logger;
-            _mapCooldown.EventCooldownRefreshed += OnMapsLoaded;
         }
 
         public void OnMapStart(string map)
@@ -84,25 +78,6 @@ namespace cs2_rockthevote
         public void OnConfigParsed(Config config)
         {
             _nomConfig = config.Nominate;
-        }
-
-        public void OnMapsLoaded(object? sender, Map[] maps)
-        {
-            _nominationMenu = new ChatMenu(_localizer.Localize("nominate.title"), _plugin!);
-
-            foreach (var map in _mapLister.Maps!.Where(x => !GetBaseMapName(x.Name).Equals(Server.MapName, StringComparison.OrdinalIgnoreCase)))
-            {
-                bool isCooldown = _mapCooldown.IsMapInCooldown(map.Name);
-                string displayName = isCooldown ? $"{ChatColors.Grey}{map.Name}" : map.Name;
-
-                var item = _nominationMenu.AddItem(displayName, (player, _) =>
-                {
-                    Nominate(player, map.Name);
-                });
-
-                if (isCooldown)
-                    item.DisableOption = DisableOption.DisableShowNumber;
-            }
         }
 
         public void CommandHandler(CCSPlayerController? player, string map)

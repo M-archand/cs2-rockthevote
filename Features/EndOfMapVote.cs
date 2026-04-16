@@ -100,7 +100,6 @@ namespace cs2_rockthevote
         public void OnLoad(Plugin plugin)
         {
             _plugin = plugin;
-
             plugin.RegisterEventHandler<EventRoundStart>((ev, info) =>
             {
                 RestartTimer();
@@ -110,8 +109,6 @@ namespace cs2_rockthevote
 
                 return HookResult.Continue;
             });
-
-
             plugin.RegisterEventHandler<EventRoundAnnounceMatchStart>((ev, info) =>
             {
                 RestartTimer();

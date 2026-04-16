@@ -1,6 +1,5 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
@@ -9,7 +8,6 @@ namespace cs2_rockthevote
 {
     public partial class Plugin
     {
-        [GameEventHandler(HookMode.Pre)]
         public HookResult EventPlayerSpawn(EventPlayerSpawn @event, GameEventInfo @eventInfo)
         {
             var player = @event.Userid;

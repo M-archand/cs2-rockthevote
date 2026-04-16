@@ -30,10 +30,14 @@ namespace cs2_rockthevote
 
             collection.AddSingleton(p =>
             {
-                Dependencies = TypesToAdd
-                    .Where(x => dependencyType.IsAssignableFrom(x))
-                    .Select(type => (IPluginDependency<TPlugin, TConfig>)p.GetService(type)!)
-                    .ToList();
+                var resolvedDependencies = new List<IPluginDependency<TPlugin, TConfig>>();
+                foreach (var type in TypesToAdd.Where(x => dependencyType.IsAssignableFrom(x)))
+                {
+                    var resolved = (IPluginDependency<TPlugin, TConfig>)p.GetService(type)!;
+                    resolvedDependencies.Add(resolved);
+                }
+
+                Dependencies = resolvedDependencies;
 
                 return this;
             });

@@ -13,8 +13,6 @@ namespace cs2_rockthevote
 {
     public partial class Plugin
     {
-        [ConsoleCommand("css_voteextend", "Extends time for the current map")]
-        [ConsoleCommand("css_ve", "Extends time for the current map")]
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
         public void OnVoteExtendRoundTimeCommand(CCSPlayerController? player, CommandInfo command)
         {
@@ -34,7 +32,6 @@ namespace cs2_rockthevote
             _voteExtendRoundTime.CommandHandler(player, command);
         }
 
-        [GameEventHandler(HookMode.Pre)]
         public HookResult EventPlayerDisconnectExtend(EventPlayerDisconnect @event, GameEventInfo @eventInfo)
         {
             var player = @event.Userid;

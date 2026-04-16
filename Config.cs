@@ -97,6 +97,7 @@ namespace cs2_rockthevote
     public class GeneralConfig
     {
         public string AdminPermission { get; set; } = "@css/root";
+        public bool DebugLogging { get; set; } = false;
         public int MaxMapExtensions { get; set; } = 2;
         public int RoundTimeExtension { get; set; } = 15;
         public int MapsInCoolDown { get; set; } = 3;
@@ -112,7 +113,7 @@ namespace cs2_rockthevote
 
     public class Config : BasePluginConfig, IBasePluginConfig
     {
-        public const int CurrentVersion = 24;
+        public const int CurrentVersion = 25;
 
         [JsonPropertyName("ConfigVersion")]
         public override int Version { get; set; } = CurrentVersion;
