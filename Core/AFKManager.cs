@@ -167,6 +167,12 @@ namespace cs2_rockthevote
             return true;
         }
 
+        public void ClearPlayer(uint index)
+        {
+            _afkPlayers.Remove(index);
+            _lastOrigin.Remove(index);
+        }
+
         public bool IsAfk(CCSPlayerController player) => _afkPlayers.Contains(player.Index);
     }
 }
