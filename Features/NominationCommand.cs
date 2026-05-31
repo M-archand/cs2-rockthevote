@@ -287,13 +287,11 @@ namespace cs2_rockthevote
             if (Nominations.Count == 0)
                 return new List<string>();
 
-            var rawNominations = Nominations
-                .Select(x => x.Value)
-                .Aggregate((acc, x) => acc.Concat(x).ToList());
+            var counts = new Dictionary<string, int>();
+            foreach (var map in Nominations.Values.SelectMany(v => v))
+                counts[map] = counts.TryGetValue(map, out var c) ? c + 1 : 1;
 
-            return [.. rawNominations
-                .Distinct()
-                .Select(map => new KeyValuePair<string, int>(map, rawNominations.Count(x => x == map)))
+            return [.. counts
                 .OrderByDescending(x => x.Value)
                 .Select(x => x.Key)];
         }
