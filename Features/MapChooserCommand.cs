@@ -13,7 +13,7 @@ namespace cs2_rockthevote
         private readonly MapLister _mapLister;
         private Plugin? _plugin;
 
-        private string[] _permissions = ["@css/root,@css/admin"];
+        private string[] _permissions = ["@css/root", "@css/admin"];
         private MapChooserConfig _config = new();
 
         public MapChooserCommand(StringLocalizer localizer, MapLister mapLister, ILogger<MapChooserCommand> logger)
