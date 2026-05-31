@@ -35,6 +35,11 @@ namespace cs2_rockthevote
             _plugin = plugin;
         }
 
+        public void Unload(Plugin plugin)
+        {
+            KillAFKTimer();
+        }
+
         public void OnConfigParsed(Config config)
         {
             _generalConfig = config.General;

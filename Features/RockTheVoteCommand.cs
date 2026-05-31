@@ -69,6 +69,13 @@ namespace cs2_rockthevote
             _plugin = plugin;
         }
 
+        public void Unload(Plugin plugin)
+        {
+            StopRtvTimer();
+            StopReminderTimer();
+            KillTimer();
+        }
+
         public void OnConfigParsed(Config config)
         {
             _config = config.Rtv;

@@ -67,10 +67,13 @@ namespace cs2_rockthevote
         private static string m_szCurrentVoteDetailStr = string.Empty;
         public static CVoteController? VoteController { get; private set; } = null;
         private static RecipientFilter CurrentVotefilter = new RecipientFilter();
+        private static Timer? m_VoteTimer = null;
 
         /// Resets the vote state, clearing any ongoing vote information.
         public static void Reset(CVoteController? voteController = null)
         {
+            m_VoteTimer?.Kill();
+            m_VoteTimer = null;
             m_bIsVoteInProgress = false;
             m_VoteHandler = null;
             m_VoteResult = null;
@@ -95,6 +98,8 @@ namespace cs2_rockthevote
         /// Clears all vote states on map change.
         public static void OnMapStart()
         {
+            m_VoteTimer?.Kill();
+            m_VoteTimer = null;
             m_bIsVoteInProgress = false;
             m_VoteHandler = null;
             m_VoteResult = null;
@@ -242,8 +247,10 @@ namespace cs2_rockthevote
             m_VoteHandler?.Invoke(YesNoVoteAction.VoteAction_Start, 0, 0);
 
             int voteNum = m_iVoteCount;
-            new Timer(flDuration, () =>
+            m_VoteTimer?.Kill();
+            m_VoteTimer = new Timer(flDuration, () =>
             {
+                m_VoteTimer = null;
                 if (voteNum == m_iVoteCount)
                     EndVote(YesNoVoteEndReason.VoteEnd_TimeUp);
             }, TimerFlags.STOP_ON_MAPCHANGE);
@@ -313,6 +320,9 @@ namespace cs2_rockthevote
                 return;
 
             m_bIsVoteInProgress = false;
+
+            m_VoteTimer?.Kill();
+            m_VoteTimer = null;
 
             if (m_iVoteCount == 99)
                 m_iVoteCount = 0;

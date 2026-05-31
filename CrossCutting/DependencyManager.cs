@@ -66,5 +66,13 @@ namespace cs2_rockthevote
                 service.OnConfigParsed(config);
             }
         }
+
+        public void OnPluginUnload(TPlugin plugin)
+        {
+            foreach (var service in Dependencies)
+            {
+                service.Unload(plugin);
+            }
+        }
     }
 }

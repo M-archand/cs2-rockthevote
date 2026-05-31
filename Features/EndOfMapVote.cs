@@ -70,6 +70,11 @@ namespace cs2_rockthevote
             KillTimer();
         }
 
+        public void Unload(Plugin plugin)
+        {
+            KillTimer();
+        }
+
         void KillTimer()
         {
             _timer?.Kill();

@@ -90,6 +90,16 @@ namespace cs2_rockthevote
             _mapChangeVerifyTimer = null;
         }
 
+        public void Unload(Plugin plugin)
+        {
+            _pendingMapChangeTimer?.Kill();
+            _pendingMapChangeTimer = null;
+            _winPanelDelayTimer?.Kill();
+            _winPanelDelayTimer = null;
+            _mapChangeVerifyTimer?.Kill();
+            _mapChangeVerifyTimer = null;
+        }
+
         public bool ChangeNextMap(MapChangeTrigger trigger)
         {
             if (!_pluginState.MapChangeScheduled)

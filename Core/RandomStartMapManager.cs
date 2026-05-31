@@ -18,6 +18,12 @@ namespace cs2_rockthevote
             _plugin = plugin;
         }
 
+        public void Unload(Plugin plugin)
+        {
+            _timerChangeMap?.Kill();
+            _timerChangeMap = null;
+        }
+
         public void OnConfigParsed(Config config)
         {
             _generalConfig = config.General;

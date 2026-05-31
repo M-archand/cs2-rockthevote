@@ -102,6 +102,7 @@ namespace cs2_rockthevote
         public override void Unload(bool hotReload)
         {
             RemoveListener<OnMapStart>(_dependencyManager.OnMapStart);
+            _dependencyManager.OnPluginUnload(this);
         }
 
         public void OnConfigParsed(Config config)

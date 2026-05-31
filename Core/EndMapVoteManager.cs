@@ -126,6 +126,15 @@ namespace cs2_rockthevote
             KillHintEntities();
         }
 
+        public void Unload(Plugin plugin)
+        {
+            KillTimer();
+            KillNextVoteTimer();
+            KillChatMapChoiceTimer();
+            KillIgnoreWinConditionsPollTimer();
+            KillHintEntities();
+        }
+
         private void KillIgnoreWinConditionsPollTimer()
         {
             _ignoreWinConditionsPollTimer?.Kill();
@@ -490,7 +499,7 @@ namespace cs2_rockthevote
 
             // Capture slots, not raw controllers, so the late ReplicateConVar cleanup re-validates each handle.
             var targetSlots = targets.Where(p => p != null && p.IsValid).Select(p => p.Slot).ToList();
-            new Timer(seconds, () =>
+            var cleanupTimer = new Timer(seconds, () =>
             {
                 Server.ExecuteCommand("sv_gameinstructor_disable true");
                 foreach (var s in targetSlots)
@@ -508,6 +517,7 @@ namespace cs2_rockthevote
                     }
                 }
             }, TimerFlags.STOP_ON_MAPCHANGE);
+            _hintOuterTimers.Add(cleanupTimer);
         }
 
         private void ShowHudInstructorHint(CCSPlayerController controller, string text, float seconds, string iconOnScreen, string iconOffScreen, string bindingCmd, Color color, float iconHeightOffset = 0f)
@@ -580,7 +590,7 @@ namespace cs2_rockthevote
             }
             else if (time > 0.0f)
             {
-                new Timer(time, () =>
+                var removeTimer = new Timer(time, () =>
                 {
                     try
                     {
@@ -595,6 +605,7 @@ namespace cs2_rockthevote
                         _debugLogger.LogError(ex, "[RTV.Hint] RemoveEntity timer failed");
                     }
                 }, TimerFlags.STOP_ON_MAPCHANGE);
+                _hintOuterTimers.Add(removeTimer);
             }
         }
 
