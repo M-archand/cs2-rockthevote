@@ -96,6 +96,9 @@ namespace cs2_rockthevote.CrossCutting
                 var hud = _hudBuilder.ToString();
                 foreach (var player in players)
                 {
+                    if (player.UserId == null)
+                        continue;
+
                     var userId = player.UserId!.Value;
                     if (_generalConfig.HideHudAfterVote && _endMap.VotedPlayers.Contains(userId))
                         continue;

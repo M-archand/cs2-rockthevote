@@ -170,6 +170,9 @@ namespace cs2_rockthevote
 
         public void Nominate(CCSPlayerController player, string map)
         {
+            if (player == null || !player.IsValid || player.UserId == null)
+                return;
+
             var userId  = player.UserId!.Value;
             var mapName = map.Trim();
             var baseName = GetBaseMapName(mapName);
@@ -297,6 +300,9 @@ namespace cs2_rockthevote
 
         public void PlayerDisconnected(CCSPlayerController player)
         {
+            if (player?.UserId == null)
+                return;
+
             int userId = player.UserId!.Value;
             Nominations.Remove(userId);
         }

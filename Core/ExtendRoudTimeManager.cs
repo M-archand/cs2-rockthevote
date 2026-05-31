@@ -52,6 +52,9 @@ namespace cs2_rockthevote
 
         public void ExtendTimeVoted(CCSPlayerController player, string voteResponse)
         {
+            if (player == null || !player.IsValid || player.UserId == null)
+                return;
+
             int userId = player.UserId!.Value;
 
             if (Votes.ContainsKey(userId))
