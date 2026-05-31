@@ -47,6 +47,17 @@ namespace cs2_rockthevote
         public Dictionary<string,int> Votes { get; private set; } = new();
         public IReadOnlyDictionary<string, int> CurrentVotes => Votes;
 
+        private List<KeyValuePair<string, int>> _sortedTopVotes = new();
+        public IReadOnlyList<KeyValuePair<string, int>> SortedTopVotes => _sortedTopVotes;
+
+        private void RebuildSortedTopVotes()
+        {
+            _sortedTopVotes = Votes
+                .OrderByDescending(x => x.Value)
+                .Take(MaxOptionsHud)
+                .ToList();
+        }
+
         private GeneralConfig _generalConfig = new();
         private EndOfMapConfig _endMapConfig = new();
         private RtvConfig _rtvConfig = new();
@@ -118,6 +129,7 @@ namespace cs2_rockthevote
             Votes.Clear();
             _playerVotes.Clear();
             _currentVoteOptions.Clear();
+            _sortedTopVotes = new();
             TimeLeft = 0;
             mapsElected.Clear();
             KillTimer();
@@ -387,6 +399,7 @@ namespace cs2_rockthevote
 
             _playerVotes[userId] = mapName;
             Votes[mapName] += 1;
+            RebuildSortedTopVotes();
             player.PrintToChat(_localizer.LocalizeWithPrefix("emv.you-voted", mapName));
             if (_endMapConfig.EnableRevote)
                 player.PrintToChat(_localizer.LocalizeWithPrefix("emv.revote"));
@@ -673,6 +686,7 @@ namespace cs2_rockthevote
             }
 
             _currentVoteOptions.AddRange(voteOptions);
+            RebuildSortedTopVotes();
             _canVote = ServerManager.ValidPlayerCount();
             int voteDuration = isRtv ? _rtvConfig.MapVoteDuration : _endMapConfig.VoteDuration;
             TimeLeft = voteDuration;

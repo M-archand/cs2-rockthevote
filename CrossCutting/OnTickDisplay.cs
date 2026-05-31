@@ -10,6 +10,7 @@ namespace cs2_rockthevote.CrossCutting
         private readonly RockTheVoteCommand _rtv;
         private readonly ExtendRoundTimeManager _voteExtend;
         private readonly StringLocalizer _localizer;
+        private readonly StringBuilder _hudBuilder = new();
         private GeneralConfig _generalConfig = new();
         private EndOfMapConfig _endMapConfig = new();
         private VoteExtendConfig _voteExtendConfig = new();
@@ -52,11 +53,14 @@ namespace cs2_rockthevote.CrossCutting
             if (!_pluginState.EofVoteHappening && !_pluginState.ExtendTimeVoteHappening && !_pluginState.RtvVoteHappening)
                 return;
 
+            // Resolve the valid-player set once per tick, each call allocates a fresh array.
+            var players = ServerManager.ValidPlayers();
+
             // EndMapVote HUD Countdown. Don't show if EnabledHudMenu true, otherwise this would be covered by the map list
             if (_endMapConfig.EnableCountdown && _endMapConfig.CountdownType == "hud" && _pluginState.EofVoteHappening && _endMapConfig.MenuType != "HudMenu")
             {
                 string countdown = _localizer.Localize("emv.hud.timer", _endMap.TimeLeft);
-                foreach (var player in ServerManager.ValidPlayers())
+                foreach (var player in players)
                     player.PrintToCenter(countdown);
             }
 
@@ -64,7 +68,7 @@ namespace cs2_rockthevote.CrossCutting
             if (_rtvConfig.EnableCountdown && _rtvConfig.CountdownType == "hud" && _pluginState.RtvVoteHappening)
             {
                 string countdown = _localizer.Localize("general.hud-countdown", _rtv.TimeLeft);
-                foreach (var player in ServerManager.ValidPlayers())
+                foreach (var player in players)
                     player.PrintToCenter(countdown);
             }
 
@@ -72,30 +76,31 @@ namespace cs2_rockthevote.CrossCutting
             if (_voteExtendConfig.EnableCountdown && _voteExtendConfig.CountdownType == "hud" && _pluginState.ExtendTimeVoteHappening)
             {
                 string countdown = _localizer.Localize("general.hud-countdown", _voteExtend.TimeLeft);
-                foreach (var player in ServerManager.ValidPlayers())
+                foreach (var player in players)
                     player.PrintToCenter(countdown);
             }
 
             // HUD map vote list
             if (_endMapConfig.MenuType == "HudMenu" && _pluginState.EofVoteHappening)
             {
-                var sb = new StringBuilder();
-                sb.Append($"<b><font color='yellow'>{_localizer.Localize("emv.hud.timer", _endMap.TimeLeft)}</font></b>");
+                _hudBuilder.Clear();
+                _hudBuilder.Append($"<b><font color='yellow'>{_localizer.Localize("emv.hud.timer", _endMap.TimeLeft)}</font></b>");
 
                 int idx = 1;
-                foreach (var kv in _endMap.CurrentVotes.OrderByDescending(x => x.Value).Take(_endMap.MaxOptionsHud))
+                const string header = "<br><font color='yellow'>!{0}</font> {1} <font color='lime'>({2})</font>";
+                foreach (var kv in _endMap.SortedTopVotes)
                 {
-                    var header = "<br><font color='yellow'>!{0}</font> {1} <font color='lime'>({2})</font>";
-                    sb.AppendFormat(header, idx++, kv.Key, kv.Value);
+                    _hudBuilder.AppendFormat(header, idx++, kv.Key, kv.Value);
                 }
 
-                foreach (var player in ServerManager.ValidPlayers())
+                var hud = _hudBuilder.ToString();
+                foreach (var player in players)
                 {
                     var userId = player.UserId!.Value;
                     if (_generalConfig.HideHudAfterVote && _endMap.VotedPlayers.Contains(userId))
                         continue;
 
-                    player.PrintToCenterHtml(sb.ToString());
+                    player.PrintToCenterHtml(hud);
                 }
             }
         }

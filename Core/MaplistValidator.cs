@@ -1,3 +1,4 @@
+using CounterStrikeSharp.API;
 using Microsoft.Extensions.Logging;
 using System.Text;
 using System.Text.Json;
@@ -204,6 +205,8 @@ namespace cs2_rockthevote
         private async Task HandleMissingMapAsync(Map map, ulong publishedFileId)
         {
             _logger.LogWarning($"[Map-Checker] ⚠️ {map.Name} (WorkshopID {publishedFileId}) does not exist!");
+
+            Server.NextWorldUpdate(() => _mapLister.PruneMaps(new[] { map }));
 
             if (string.IsNullOrEmpty(_config.DiscordWebhook))
                 return;
