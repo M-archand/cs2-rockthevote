@@ -188,8 +188,8 @@ namespace cs2_rockthevote
                 return;
             }
 
-            // Enforce per-player nomination limit
-            if (userNoms.Count >= _nomConfig.NominateLimit)
+            // Enforce per-player nomination limit (0 = unlimited)
+            if (_nomConfig.NominateLimit > 0 && userNoms.Count >= _nomConfig.NominateLimit)
             {
                 player.PrintToChat(_localizer.LocalizeWithPrefix("nominate.limit", _nomConfig.NominateLimit));
                 return;
