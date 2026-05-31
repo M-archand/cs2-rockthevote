@@ -14,6 +14,7 @@ namespace cs2_rockthevote
         CCSGameRules? _gameRules = null;
         private Plugin? _plugin;
         private ConVar? _roundTimeCvar;
+        private ConVar? _timeLimitCvar;
         private float _fallbackRoundStartTime;
         private int _fallbackRoundTimeSeconds;
         private ILogger _debugLogger = NullLogger<GameRules>.Instance;
@@ -38,6 +39,11 @@ namespace cs2_rockthevote
             _fallbackRoundTimeSeconds = (int)MathF.Round((_roundTimeCvar?.GetPrimitiveValue<float>() ?? 0f) * 60f);
         }
 
+        private void LoadTimeLimitCvar()
+        {
+            _timeLimitCvar = ConVar.Find("mp_timelimit");
+        }
+
         private CCSGameRules? GetValidGameRules(bool refresh = false)
         {
             try
@@ -59,7 +65,7 @@ namespace cs2_rockthevote
             catch (InvalidOperationException ex)
             {
                 _gameRules = null;
-                _debugLogger.LogError(ex, "[GameRules] InvalidOperation while resolving gamerules. refresh={Refresh} message={Message}", refresh, ex.Message);
+                _debugLogger.LogError(ex, "[RTV.GameRules] InvalidOperation while resolving gamerules. refresh={Refresh} message={Message}", refresh, ex.Message);
                 return null;
             }
         }
@@ -67,13 +73,18 @@ namespace cs2_rockthevote
         public void SetGameRulesAsync()
         {
             _gameRules = null;
-            _plugin?.AddTimer(1.0f, SetGameRules, TimerFlags.STOP_ON_MAPCHANGE);
+            _plugin?.AddTimer(1.0f, () =>
+            {
+                SetGameRules();
+                SyncRoundTimeToTimeLimit();
+            }, TimerFlags.STOP_ON_MAPCHANGE);
         }
 
         public void OnLoad(Plugin plugin)
         {
             _plugin = plugin;
             LoadRoundTimeCvar();
+            LoadTimeLimitCvar();
             _fallbackRoundStartTime = 0f;
             SetGameRulesAsync();
             plugin.RegisterEventHandler<EventRoundStart>(OnRoundStart);
@@ -106,7 +117,7 @@ namespace cs2_rockthevote
             if (roundTime > 0 && roundStartTime > 0)
             {
                 _debugLogger.LogWarning(
-                    "[GameRules] TryGetRoundTiming using fallback timing. roundTime={RoundTime} roundStartTime={RoundStartTime}",
+                    "[RTV.GameRules] TryGetRoundTiming using fallback timing. roundTime={RoundTime} roundStartTime={RoundStartTime}",
                     roundTime,
                     roundStartTime
                 );
@@ -114,7 +125,7 @@ namespace cs2_rockthevote
             }
 
             _debugLogger.LogWarning(
-                "[GameRules] TryGetRoundTiming failed. gamerules unavailable and fallback timing invalid. roundTime={RoundTime} roundStartTime={RoundStartTime}",
+                "[RTV.GameRules] TryGetRoundTiming failed. gamerules unavailable and fallback timing invalid. roundTime={RoundTime} roundStartTime={RoundStartTime}",
                 roundTime,
                 roundStartTime
             );
@@ -124,6 +135,7 @@ namespace cs2_rockthevote
         public void OnMapStart(string map)
         {
             LoadRoundTimeCvar();
+            LoadTimeLimitCvar();
             _fallbackRoundStartTime = Server.CurrentTime;
             SetGameRulesAsync();
         }
@@ -132,16 +144,20 @@ namespace cs2_rockthevote
         public HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
         {
             LoadRoundTimeCvar();
+            LoadTimeLimitCvar();
             _fallbackRoundStartTime = Server.CurrentTime;
             SetGameRules();
+            ScheduleRoundTimeSync();
             return HookResult.Continue;
         }
 
         public HookResult OnAnnounceWarmup(EventRoundAnnounceWarmup @event, GameEventInfo info)
         {
             LoadRoundTimeCvar();
+            LoadTimeLimitCvar();
             _fallbackRoundStartTime = Server.CurrentTime;
             SetGameRules();
+            ScheduleRoundTimeSync();
             return HookResult.Continue;
         }
 
@@ -158,6 +174,80 @@ namespace cs2_rockthevote
                 if (gameRules != null)
                     gameRules.RoundTime = value;
             }
+        }
+
+        // Fixes an issue where the maptime shown on the scoreboard would not match the actual time left set by the engine
+        public bool SyncRoundTimeToTimeLimit()
+        {
+            try
+            {
+                var gameRules = GetValidGameRules();
+                if (gameRules == null)
+                {
+                    _debugLogger.LogWarning("[RTV.GameRules] SyncRoundTimeToTimeLimit skipped, gamerules entity not yet available.");
+                    return false;
+                }
+
+                if (_timeLimitCvar == null)
+                    LoadTimeLimitCvar();
+
+                float timelimitMinutes = _timeLimitCvar?.GetPrimitiveValue<float>() ?? 0f;
+                int targetRoundTime;
+
+                if (timelimitMinutes > 0f)
+                {
+                    targetRoundTime = (int)MathF.Ceiling(timelimitMinutes * 60f);
+                }
+                else
+                {
+                    if (_roundTimeCvar == null)
+                        LoadRoundTimeCvar();
+                    float roundTimeMinutes = _roundTimeCvar?.GetPrimitiveValue<float>() ?? 0f;
+                    if (roundTimeMinutes <= 0f)
+                    {
+                        _debugLogger.LogWarning("[RTV.GameRules] SyncRoundTimeToTimeLimit skipped, neither mp_timelimit nor mp_roundtime is positive.");
+                        return false;
+                    }
+                    targetRoundTime = (int)MathF.Ceiling(roundTimeMinutes * 60f);
+                }
+
+                if (gameRules.RoundTime == targetRoundTime)
+                {
+                    _debugLogger.LogInformation("[RTV.GameRules] SyncRoundTimeToTimeLimit no-op, gameRules.RoundTime already {Target}s.", targetRoundTime);
+                    return true;
+                }
+
+                int previous = gameRules.RoundTime;
+                gameRules.RoundTime = targetRoundTime;
+                _fallbackRoundTimeSeconds = targetRoundTime;
+
+                var gameRulesProxy = Utilities
+                    .FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules")
+                    .FirstOrDefault();
+                if (gameRulesProxy != null)
+                {
+                    Utilities.SetStateChanged(gameRulesProxy, "CCSGameRulesProxy", "m_pGameRules");
+                }
+                else
+                {
+                    _debugLogger.LogWarning("[RTV.GameRules] SyncRoundTimeToTimeLimit wrote RoundTime but could not locate CCSGameRulesProxy to broadcast the change.");
+                }
+
+                _debugLogger.LogInformation(
+                    "[RTV.GameRules] SyncRoundTimeToTimeLimit applied. previous={Previous}s target={Target}s timelimitMinutes={TimelimitMinutes}",
+                    previous, targetRoundTime, timelimitMinutes);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _debugLogger.LogError(ex, "[RTV.GameRules] SyncRoundTimeToTimeLimit failed: {Message}", ex.Message);
+                return false;
+            }
+        }
+
+        private void ScheduleRoundTimeSync()
+        {
+            _plugin?.AddTimer(1.0f, () => SyncRoundTimeToTimeLimit(), TimerFlags.STOP_ON_MAPCHANGE);
         }
     }
 }

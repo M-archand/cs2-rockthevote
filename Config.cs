@@ -63,6 +63,9 @@ namespace cs2_rockthevote
         public int MinPlayers { get; set; } = 0;
         public int MinRounds { get; set; } = 0;
         public string Permission { get; set; } = "@css/vip";
+
+        [JsonIgnore]
+        public string[] Permissions => PermissionUtility.Parse(Permission);
     }
 
     public class VoteExtendConfig
@@ -76,6 +79,9 @@ namespace cs2_rockthevote
         public string CountdownType { get; set; } = "chat";
         public int ChatCountdownInterval { get; set; } = 15;
         public string Permission { get; set; } = "@css/vip";
+
+        [JsonIgnore]
+        public string[] Permissions => PermissionUtility.Parse(Permission);
     }
 
     public class NominateConfig
@@ -85,6 +91,9 @@ namespace cs2_rockthevote
         public string MenuType { get; set; } = "WasdMenu";
         public int NominateLimit { get; set; } = 1;
         public string Permission { get; set; } = "";
+
+        [JsonIgnore]
+        public string[] Permissions => PermissionUtility.Parse(Permission);
     }
 
     public class MapChooserConfig
@@ -92,11 +101,18 @@ namespace cs2_rockthevote
         public string Command { get; set; } = "mapmenu,mm";
         public string MenuType { get; set; } = "WasdMenu";
         public string Permission { get; set; } = "@css/changemap";
+
+        [JsonIgnore]
+        public string[] Permissions => PermissionUtility.Parse(Permission);
     }
 
     public class GeneralConfig
     {
         public string AdminPermission { get; set; } = "@css/root";
+
+        [JsonIgnore]
+        public string[] AdminPermissions => PermissionUtility.Parse(AdminPermission);
+
         public bool DebugLogging { get; set; } = false;
         public int MaxMapExtensions { get; set; } = 2;
         public int RoundTimeExtension { get; set; } = 15;
@@ -106,14 +122,14 @@ namespace cs2_rockthevote
         public bool IncludeSpectator { get; set; } = true;
         public bool IncludeAFK { get; set; } = true;
         public int AFKCheckInterval { get; set; } = 30;
-        public bool EnableMapValidation { get; set; } = true;
+        public bool EnableMapValidation { get; set; } = false;
         public string SteamApiKey { get; set; } = "";
         public string DiscordWebhook { get; set; } = "";
     }
 
     public class Config : BasePluginConfig, IBasePluginConfig
     {
-        public const int CurrentVersion = 25;
+        public const int CurrentVersion = 23;
 
         [JsonPropertyName("ConfigVersion")]
         public override int Version { get; set; } = CurrentVersion;

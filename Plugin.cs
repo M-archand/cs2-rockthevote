@@ -1,11 +1,9 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
 using static CounterStrikeSharp.API.Core.Listeners;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Events;
 using CounterStrikeSharp.API.Modules.Utils;
-using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Extensions;
 using CS2MenuManager.API.Class;
 using Microsoft.Extensions.DependencyInjection;
@@ -145,9 +143,7 @@ namespace cs2_rockthevote
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
         public void ReloadCommand(CCSPlayerController? player, CommandInfo command)
         {
-            string permission = Config.General.AdminPermission;
-
-            if (player != null && !AdminManager.PlayerHasPermissions(player, permission))
+            if (player != null && !PermissionUtility.HasAny(player, Config.General.AdminPermissions))
             {
                 command?.ReplyToCommand($"[RTV] {ChatColors.Red}You do not have the correct permission to execute this command.");
                 return;

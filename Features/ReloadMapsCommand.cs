@@ -1,7 +1,4 @@
-using System.IO;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -39,10 +36,7 @@ namespace cs2_rockthevote
 
         public void CommandHandler(CCSPlayerController? player, CommandInfo command)
         {
-            string permission = _generalConfig.AdminPermission;
-            bool requiresPermission = !string.IsNullOrWhiteSpace(permission);
-
-            if (player != null && requiresPermission && !AdminManager.PlayerHasPermissions(player, permission))
+            if (player != null && !PermissionUtility.HasAny(player, _generalConfig.AdminPermissions))
             {
                 command.ReplyToCommand($"[RTV] {ChatColors.Red}You do not have the correct permission to execute this command.");
                 return;

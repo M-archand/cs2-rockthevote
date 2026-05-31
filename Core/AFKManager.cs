@@ -80,25 +80,34 @@ namespace cs2_rockthevote
 
             _plugin.AddTimer(delaySeconds, () =>
             {
-                // player might have disconnected or switched; re-check validity
                 if (player == null || !player.IsValid || !player.ReallyValid())
                     return;
-                
+
                 _afkPlayers.Remove(player.Index);
 
-                var origin = player.PlayerPawn.Value?.CBodyComponent?.SceneNode?.AbsOrigin;
-                if (origin != null)
-                    _lastOrigin[player.Index] = new Vector(origin.X, origin.Y, origin.Z);
-            });
+                var pawn = player.PlayerPawn?.Value;
+                if (pawn is null || !pawn.IsValid)
+                    return;
 
-            Server.PrintToConsole($"[AFKManager] Checked position for player: {player.PlayerName}. Position: {player.PlayerPawn.Value?.CBodyComponent?.SceneNode?.AbsOrigin}");
+                var origin = pawn.CBodyComponent?.SceneNode?.AbsOrigin;
+                if (origin != null)
+                {
+                    _lastOrigin[player.Index] = new Vector(origin.X, origin.Y, origin.Z);
+
+                    if (_generalConfig.DebugLogging)
+                        Server.PrintToConsole($"[RTV-AFKManager] Checked position for player: {player.PlayerName}. Position: {origin}");
+                }
+            }, TimerFlags.STOP_ON_MAPCHANGE);
         }
 
         public void CheckAllPlayers()
         {
             foreach (var player in Utilities.GetPlayers().Where(p => p.ReallyValid()))
             {
-                var origin = player.PlayerPawn.Value?.CBodyComponent?.SceneNode?.AbsOrigin;
+                var pawn = player.PlayerPawn?.Value;
+                if (pawn is null || !pawn.IsValid) continue;
+
+                var origin = pawn.CBodyComponent?.SceneNode?.AbsOrigin;
                 if (origin == null) continue;
 
                 var current = new Vector(origin.X, origin.Y, origin.Z);
@@ -142,7 +151,11 @@ namespace cs2_rockthevote
 
             _afkPlayers.Remove(player.Index);
 
-            var origin = player.PlayerPawn.Value?.CBodyComponent?.SceneNode?.AbsOrigin;
+            var pawn = player.PlayerPawn?.Value;
+            if (pawn is null || !pawn.IsValid)
+                return true;
+
+            var origin = pawn.CBodyComponent?.SceneNode?.AbsOrigin;
             if (origin != null)
                 _lastOrigin[player.Index] = new Vector(origin.X, origin.Y, origin.Z);
 

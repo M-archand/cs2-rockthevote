@@ -1,7 +1,5 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Utils;
 using CounterStrikeSharp.API.Modules.Commands;
 using CS2MenuManager.API.Enum;
@@ -20,9 +18,7 @@ namespace cs2_rockthevote
             if (player == null || command == null)
                 return;
 
-            // If "Permission" is blank or whitespace, allow everyone. Otherwise enforce it
-            string perm = Config.Votemap.Permission;
-            bool hasPerm = string.IsNullOrWhiteSpace(perm) || AdminManager.PlayerHasPermissions(player, perm);
+            bool hasPerm = PermissionUtility.HasAny(player, Config.Votemap.Permissions);
 
             if (!hasPerm)
             {

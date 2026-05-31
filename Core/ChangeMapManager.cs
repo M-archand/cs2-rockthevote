@@ -1,5 +1,6 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Timers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -133,7 +134,8 @@ namespace cs2_rockthevote
             Server.PrintToChatAll(_localizer.LocalizeWithPrefixInternal(_prefix, "general.changing-map", map.Name));
 
             string mapBefore = Server.MapName ?? string.Empty;
-            float delaySeconds = _changeTrigger == MapChangeTrigger.IgnoredWinConditions ? 0.0F : 3.0F;
+
+            float delaySeconds = 3.0F;
 
             if (delaySeconds <= 0)
             {
@@ -182,6 +184,15 @@ namespace cs2_rockthevote
                 }
             }, TimerFlags.STOP_ON_MAPCHANGE);
 
+            if (_pendingMapChangeTimer is null)
+            {
+                _logger.LogError(
+                    "[MapChange] AddTimer returned null - plugin reference is null. Cannot schedule map change. map={Map}",
+                    map.Name
+                );
+                return false;
+            }
+
             return true;
         }
 
@@ -190,6 +201,8 @@ namespace cs2_rockthevote
             try
             {
                 _pluginState.MapChangeScheduled = false;
+
+                ConVar.Find("mp_timelimit")?.SetValue(0f);
 
                 _debugLogger.LogInformation(
                     "[MapChange] Evaluating command path. map={Map} mapId={MapId} previousMap={PreviousMap}",
@@ -345,11 +358,19 @@ namespace cs2_rockthevote
             _plugin = plugin;
             plugin.RegisterEventHandler<EventCsWinPanelMatch>((ev, info) =>
             {
+                _debugLogger.LogInformation(
+                    "[MapChange] EventCsWinPanelMatch fired by engine. mapChangeScheduled={Scheduled} trigger={Trigger} nextMap={NextMap} currentMap={CurrentMap}",
+                    _pluginState.MapChangeScheduled,
+                    _changeTrigger,
+                    NextMap,
+                    Server.MapName
+                );
+
                 if (_pluginState.MapChangeScheduled && _changeTrigger == MapChangeTrigger.MatchEnd)
                 {
                     var delay = (_config?.EndOfMapVote.DelayToChangeInTheEnd ?? 0) - 3.0F;
-                    if (delay < 0)
-                        delay = 0;
+                    if (delay < 1.0F)
+                        delay = 1.0F;
 
                     _debugLogger.LogInformation(
                         "[MapChange] Match-end win panel received. map={Map} delaySeconds={DelaySeconds}",

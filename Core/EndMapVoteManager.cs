@@ -1,4 +1,4 @@
-﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Commands;
@@ -19,7 +19,6 @@ namespace cs2_rockthevote
     {
         private readonly ILogger<EndMapVoteManager> _logger;
         private ILogger _debugLogger = NullLogger<EndMapVoteManager>.Instance;
-        private readonly GameRules _gameRules;
         private readonly MapLister _mapLister;
         private readonly ExtendRoundTimeManager _extendRoundTimeManager;
         private readonly TimeLimitManager _timeLimitManager;
@@ -28,11 +27,13 @@ namespace cs2_rockthevote
         private readonly StringLocalizer _localizer;
         private readonly PluginState _pluginState;
         private readonly MapCooldown _mapCooldown;
+        private readonly GameRules _gameRules;
         private Timer? Timer;
         private Timer? _nextVoteTimer;
         private Timer? _chatMapChoiceTimer;
-        private Timer? _roundEndChangeTimer;
-        private int? _lastIgnoredWinConditionsLoggedSecond;
+        private Timer? _ignoreWinConditionsPollTimer;
+        private readonly List<Timer> _hintOuterTimers = new();
+        private readonly List<CEnvInstructorHint> _hintEntities = new();
         List<string> mapsElected = new();
         private readonly Dictionary<int, string> _playerVotes = new();
         private readonly List<string> _currentVoteOptions = new();
@@ -121,6 +122,14 @@ namespace cs2_rockthevote
             mapsElected.Clear();
             KillTimer();
             KillNextVoteTimer();
+            KillIgnoreWinConditionsPollTimer();
+            KillHintEntities();
+        }
+
+        private void KillIgnoreWinConditionsPollTimer()
+        {
+            _ignoreWinConditionsPollTimer?.Kill();
+            _ignoreWinConditionsPollTimer = null;
         }
 
         private void KillNextVoteTimer()
@@ -135,11 +144,25 @@ namespace cs2_rockthevote
             _chatMapChoiceTimer = null;
         }
 
-        private void KillRoundEndChangeTimer()
+        private void KillHintEntities()
         {
-            _roundEndChangeTimer?.Kill();
-            _roundEndChangeTimer = null;
-            _lastIgnoredWinConditionsLoggedSecond = null;
+            foreach (var t in _hintOuterTimers)
+            {
+                try { t.Kill(); }
+                catch (Exception ex) { _debugLogger.LogError(ex, "[Hint] Failed to kill outer hint timer"); }
+            }
+            _hintOuterTimers.Clear();
+
+            foreach (var entity in _hintEntities)
+            {
+                try
+                {
+                    if (entity.IsValid)
+                        entity.AcceptInput("Kill");
+                }
+                catch (Exception ex) { _debugLogger.LogError(ex, "[Hint] Failed to kill hint entity"); }
+            }
+            _hintEntities.Clear();
         }
 
         private bool ShouldPrintChatMapChoices()
@@ -192,6 +215,9 @@ namespace cs2_rockthevote
 
             _nextVoteTimer = _plugin?.AddTimer(1.0F, () =>
             {
+                if (_timeLimitManager.UnlimitedTime)
+                    return;
+
                 float timeRemainingSeconds = (float)Math.Max(0, (double)_timeLimitManager.TimeRemaining);
                 if (timeRemainingSeconds <= _endMapConfig.TriggerSecondsBeforeEnd)
                 {
@@ -201,6 +227,79 @@ namespace cs2_rockthevote
                     StartVote(isRtv: false);
                 }
             }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
+        }
+
+        private void StartIgnoreWinConditionsPoll(string winnerMapName)
+        {
+            KillIgnoreWinConditionsPollTimer();
+
+            _debugLogger.LogInformation(
+                "[RTV.MapChange] Arming plugin-owned end-of-map poll (deferring creation to next frame). map={Map} currentMap={CurrentMap}",
+                winnerMapName,
+                Server.MapName
+            );
+
+            Server.NextFrame(() =>
+            {
+                _debugLogger.LogInformation("[RTV.MapChange] NextFrame: creating poll timer now. map={Map}", winnerMapName);
+                CreateIgnoreWinConditionsPollTimer(winnerMapName);
+            });
+        }
+
+        private void CreateIgnoreWinConditionsPollTimer(string winnerMapName)
+        {
+            _ignoreWinConditionsPollTimer = _plugin?.AddTimer(1.0F, () =>
+            {
+                try { _debugLogger.LogInformation("[RTV.MapChange] Poll tick entry. map={Map}", winnerMapName); }
+                catch { }
+
+                try
+                {
+                    if (!_pluginState.MapChangeScheduled)
+                    {
+                        _debugLogger.LogInformation("[RTV.MapChange] Poll tick: change no longer scheduled, stopping. map={Map}", winnerMapName);
+                        KillIgnoreWinConditionsPollTimer();
+                        return;
+                    }
+
+                    _debugLogger.LogInformation("[RTV.MapChange] Poll tick: computing remaining seconds. map={Map}", winnerMapName);
+                    int remainingSeconds = ComputeRemainingSecondsForIgnoreWinConditions();
+                    _debugLogger.LogInformation(
+                        "[RTV.MapChange] Poll tick: computed. remainingSeconds={Remaining} map={Map}",
+                        remainingSeconds,
+                        winnerMapName
+                    );
+
+                    if (remainingSeconds <= 3)
+                    {
+                        _debugLogger.LogInformation(
+                            "[RTV.MapChange] Plugin-owned trigger fired. remainingSeconds={Remaining} map={Map}",
+                            remainingSeconds,
+                            winnerMapName
+                        );
+                        KillIgnoreWinConditionsPollTimer();
+                        _changeMapManager.ChangeNextMap(MapChangeTrigger.IgnoredWinConditions);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _debugLogger.LogError(ex, "[RTV.MapChange] Plugin-owned poll callback failed. map={Map}", winnerMapName);
+                }
+            }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
+        }
+
+        private int ComputeRemainingSecondsForIgnoreWinConditions()
+        {
+            if (!_timeLimitManager.UnlimitedTime)
+            {
+                float remaining = (float)Math.Max(0, (double)_timeLimitManager.TimeRemaining);
+                return (int)Math.Floor(remaining);
+            }
+
+            float roundTime = _gameRules.RoundTime;
+            float gameStartTime = _gameRules.GameStartTime;
+            float elapsed = Server.CurrentTime - gameStartTime;
+            return (int)Math.Floor(roundTime - elapsed);
         }
 
         private void OnRevoteCommand(CCSPlayerController? player, CommandInfo _)
@@ -292,7 +391,7 @@ namespace cs2_rockthevote
         {
             TimeLeft = -1;
             KillChatMapChoiceTimer();
-            KillRoundEndChangeTimer();
+            KillHintEntities();
             if (Timer is not null)
             {
                 Timer!.Kill();
@@ -310,7 +409,7 @@ namespace cs2_rockthevote
             }
             return array;
         }
-        
+
         public void PrintCenterTextAll(string text)
         {
             foreach (var player in Utilities.GetPlayers())
@@ -321,7 +420,7 @@ namespace cs2_rockthevote
                 }
             }
         }
-        
+
         public void ChatCountdown(int secondsLeft)
         {
             if (!_pluginState.EofVoteHappening || !_endMapConfig.EnableCountdown || _endMapConfig.CountdownType != "chat")
@@ -349,7 +448,7 @@ namespace cs2_rockthevote
                 );
             }
         }
-        
+
         private void DisplayGameHintForAll(IEnumerable<CCSPlayerController> targets, float seconds = 5f)
         {
             Server.ExecuteCommand("sv_gameinstructor_disable false");
@@ -360,28 +459,54 @@ namespace cs2_rockthevote
             {
                 if (player == null || !player.IsValid) continue;
 
+                int slot = player.Slot;
                 player.ReplicateConVar("sv_gameinstructor_enable", "true");
 
-                new Timer(0.25f, () =>
+                var outerTimer = new Timer(0.25f, () =>
                 {
-                    ShowHudInstructorHint(
-                        controller: player,
-                        text: text,
-                        seconds: seconds,
-                        iconOnScreen: "",
-                        iconOffScreen: "",
-                        bindingCmd: "use_binding",
-                        color: Color.FromArgb(255, 255, 0, 0)
-                    );
+                    try
+                    {
+                        var live = Utilities.GetPlayerFromSlot(slot);
+                        if (live is null || !live.ReallyValid())
+                            return;
+
+                        ShowHudInstructorHint(
+                            controller: live,
+                            text: text,
+                            seconds: seconds,
+                            iconOnScreen: "",
+                            iconOffScreen: "",
+                            bindingCmd: "use_binding",
+                            color: Color.FromArgb(255, 255, 0, 0)
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        _debugLogger.LogError(ex, "[Hint] Outer timer ShowHudInstructorHint failed. slot={Slot}", slot);
+                    }
                 }, TimerFlags.STOP_ON_MAPCHANGE);
+                _hintOuterTimers.Add(outerTimer);
             }
 
+            // Capture slots, not raw controllers, so the late ReplicateConVar cleanup re-validates each handle.
+            var targetSlots = targets.Where(p => p != null && p.IsValid).Select(p => p.Slot).ToList();
             new Timer(seconds, () =>
             {
                 Server.ExecuteCommand("sv_gameinstructor_disable true");
-                foreach (var p in targets)
-                    if (p != null && p.IsValid)
-                        p.ReplicateConVar("sv_gameinstructor_enable", "false");
+                foreach (var s in targetSlots)
+                {
+                    try
+                    {
+                        var live = Utilities.GetPlayerFromSlot(s);
+                        if (live is null || !live.ReallyValid())
+                            continue;
+                        live.ReplicateConVar("sv_gameinstructor_enable", "false");
+                    }
+                    catch (Exception ex)
+                    {
+                        _debugLogger.LogError(ex, "[RTV.Hint] Cleanup ReplicateConVar failed. slot={Slot}", s);
+                    }
+                }
             }, TimerFlags.STOP_ON_MAPCHANGE);
         }
 
@@ -412,18 +537,35 @@ namespace cs2_rockthevote
             hint.ForceCaption = false;
 
             hint.DispatchSpawn();
+            _hintEntities.Add(hint);
 
-            hint.AcceptInput("ShowHint", pawn, pawn);
+            try
+            {
+                hint.AcceptInput("ShowHint", pawn, pawn);
+            }
+            catch (Exception ex)
+            {
+                _debugLogger.LogError(ex, "[RTV.Hint] AcceptInput ShowHint failed");
+                return;
+            }
 
             if (seconds > 0)
                 RemoveEntity(hint, seconds + 0.25f);
 
+            int controllerSlot = controller.Slot;
             _plugin?.AddTimer(5f, () =>
             {
-                Server.ExecuteCommand("sv_gameinstructor_disable true");
-
-                if (controller.IsValid)
-                    controller.ReplicateConVar("sv_gameinstructor_enable", "false");
+                try
+                {
+                    Server.ExecuteCommand("sv_gameinstructor_disable true");
+                    var live = Utilities.GetPlayerFromSlot(controllerSlot);
+                    if (live is not null && live.ReallyValid())
+                        live.ReplicateConVar("sv_gameinstructor_enable", "false");
+                }
+                catch (Exception ex)
+                {
+                    _debugLogger.LogError(ex, "[RTV.Hint] Cleanup timer failed. slot={Slot}", controllerSlot);
+                }
             }, TimerFlags.STOP_ON_MAPCHANGE);
         }
 
@@ -440,9 +582,17 @@ namespace cs2_rockthevote
             {
                 new Timer(time, () =>
                 {
-                    if (entity.IsValid)
+                    try
                     {
-                        entity.AcceptInput("Kill");
+                        if (entity.IsValid)
+                        {
+                            entity.AcceptInput("Kill");
+                            _hintEntities.Remove(entity);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _debugLogger.LogError(ex, "[RTV.Hint] RemoveEntity timer failed");
                     }
                 }, TimerFlags.STOP_ON_MAPCHANGE);
             }
@@ -520,14 +670,25 @@ namespace cs2_rockthevote
                 .Where(p => p != null && p.IsValid)
                 .ToList();
 
-            // Open Menu (config dependant)
-            foreach (var player in players)
+            foreach (var snapshot in players)
             {
-                DisplayVoteMenu(player, _currentVoteOptions, voteDuration, isRtv, allowRevote: false);
-
-                if (_endMapConfig.SoundEnabled)
+                int slot = snapshot.Slot;
+                try
                 {
-                    SoundEventHelper.PlaySound(player, _endMapConfig.SoundPath, _endMapConfig.SoundVolume);
+                    var live = Utilities.GetPlayerFromSlot(slot);
+                    if (live is null || !live.ReallyValid())
+                        continue;
+
+                    DisplayVoteMenu(live, _currentVoteOptions, voteDuration, isRtv, allowRevote: false);
+
+                    if (_endMapConfig.SoundEnabled)
+                    {
+                        SoundEventHelper.PlaySound(live, _endMapConfig.SoundPath, _endMapConfig.SoundVolume);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _debugLogger.LogError(ex, "[RTV.EndMapVote] StartVote per-player setup failed. slot={Slot}", slot);
                 }
             }
 
@@ -553,43 +714,59 @@ namespace cs2_rockthevote
             StartChatMapChoiceReminder();
             ChatCountdown(voteDuration);
 
+            float voteDeadline = Server.CurrentTime + voteDuration;
             Timer = _plugin?.AddTimer(1.0F, () =>
             {
+                TimeLeft = (int)Math.Ceiling(Math.Max(0.0, voteDeadline - Server.CurrentTime));
                 if (TimeLeft <= 0)
                 {
-                    EndVote(isRtv);
-                }
-                else
-                {
-                    TimeLeft--;
+                    _debugLogger.LogInformation("[RTV.EndMapVote] Vote-tick timer reached deadline. Deferring EndVote to next frame. isRtv={IsRtv}", isRtv);
+                    
+                    Server.NextFrame(() => EndVote(isRtv));
                 }
             }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
         }
 
         public void EndVote(bool isRtv)
         {
-            foreach (var player in ServerManager.ValidPlayers())
+            foreach (var snapshot in ServerManager.ValidPlayers())
             {
-                if (player.IsValid)
-                    MenuManager.CloseActiveMenu(player);
+                int slot = snapshot.Slot;
+                try
+                {
+                    var live = Utilities.GetPlayerFromSlot(slot);
+                    if (live is null || !live.ReallyValid())
+                        continue;
+
+                    MenuManager.CloseActiveMenu(live);
+                }
+                catch (Exception ex)
+                {
+                    _debugLogger.LogError(ex, "[RTV.EndMapVote] CloseActiveMenu failed. slot={Slot}", slot);
+                }
             }
 
             KillTimer();
             _currentVoteOptions.Clear();
 
-            bool ignoreRoundWinConditions = !isRtv
-                && !_endMapConfig.ChangeMapImmediately
-                && ConVar.Find("mp_ignore_round_win_conditions")?.GetPrimitiveValue<bool>() == true;
+            bool ignoreRoundWinConditions =
+                ConVar.Find("mp_ignore_round_win_conditions")?.GetPrimitiveValue<bool>() == true;
 
-            MapChangeTrigger trigger = !isRtv && !_endMapConfig.ChangeMapImmediately
-                ? (ignoreRoundWinConditions ? MapChangeTrigger.IgnoredWinConditions : MapChangeTrigger.MatchEnd)
-                : MapChangeTrigger.RoundStart;
+            MapChangeTrigger trigger;
+            if (isRtv)
+                trigger = MapChangeTrigger.RoundStart;
+            else if (_endMapConfig.ChangeMapImmediately)
+                trigger = MapChangeTrigger.IgnoredWinConditions;
+            else if (ignoreRoundWinConditions)
+                trigger = MapChangeTrigger.IgnoredWinConditions;
+            else
+                trigger = MapChangeTrigger.MatchEnd;
             string extendOption = _localizer.Localize("extendtime.list-name");
-            
+
             decimal totalVotes = Votes.Select(x => x.Value).Sum();
             KeyValuePair<string, int> winner;
             Random rnd = new();
-            
+
             if (totalVotes == 0)
             {
                 // No votes cast, pick a random map(not the extend).
@@ -606,11 +783,11 @@ namespace cs2_rockthevote
                 string chosenKey = tiedMaps[rnd.Next(tiedMaps.Count)];
                 winner = new KeyValuePair<string,int>(chosenKey, maxVotes);
             }
-            
+
             decimal percent = totalVotes > 0 ? winner.Value / totalVotes * 100M : 0;
 
             _debugLogger.LogInformation(
-                "[EndMapVote] Vote ended. isRtv={IsRtv} winner={Winner} winnerVotes={WinnerVotes} totalVotes={TotalVotes} percent={Percent} trigger={Trigger} changeImmediately={ChangeImmediately} ignoreRoundWinConditions={IgnoreRoundWinConditions} currentMap={CurrentMap}",
+                "[RTV.EndMapVote] Vote ended. isRtv={IsRtv} winner={Winner} winnerVotes={WinnerVotes} totalVotes={TotalVotes} percent={Percent} trigger={Trigger} changeImmediately={ChangeImmediately} currentMap={CurrentMap}",
                 isRtv,
                 winner.Key,
                 winner.Value,
@@ -618,10 +795,9 @@ namespace cs2_rockthevote
                 percent,
                 trigger,
                 !isRtv ? _endMapConfig.ChangeMapImmediately : !_rtvConfig.ChangeAtRoundEnd,
-                ignoreRoundWinConditions,
                 Server.MapName
             );
-            
+
             Server.PrintToChatAll(_localizer.LocalizeWithPrefix("emv.vote-ended", winner.Key, percent, totalVotes));
 
             if (winner.Key == extendOption)
@@ -635,7 +811,7 @@ namespace cs2_rockthevote
                     if (success)
                     {
                         _debugLogger.LogInformation(
-                            "[EndMapVote] Extend won and applied. minutes={Minutes} mapExtensionsUsed={ExtensionsUsed}",
+                            "[RTV.EndMapVote] Extend won and applied. minutes={Minutes} mapExtensionsUsed={ExtensionsUsed}",
                             _generalConfig.RoundTimeExtension,
                             _pluginState.MapExtensionCount + 1
                         );
@@ -644,11 +820,11 @@ namespace cs2_rockthevote
                     }
                     else
                     {
-                        _debugLogger.LogWarning("[EndMapVote] Extend won but apply failed. minutes={Minutes}", _generalConfig.RoundTimeExtension);
+                        _debugLogger.LogWarning("[RTV.EndMapVote] Extend won but apply failed. minutes={Minutes}", _generalConfig.RoundTimeExtension);
                         Server.PrintToChatAll(_localizer.LocalizeWithPrefix("extendtime.vote-ended.failed", percent, totalVotes));
                     }
                 }
-                
+
                 ScheduleNextVote();
             }
             else
@@ -662,80 +838,14 @@ namespace cs2_rockthevote
                         _debugLogger.LogInformation("[EndMapVote] Changing map immediately from end-of-map vote. winner={Winner}", winner.Key);
                         _changeMapManager.ChangeNextMap();
                     }
+                    else if (ignoreRoundWinConditions)
+                    {
+                        StartIgnoreWinConditionsPoll(winner.Key);
+                    }
                     else
                     {
                         if (trigger == MapChangeTrigger.RoundStart)
                             Server.PrintToChatAll(_localizer.LocalizeWithPrefix("general.changing-map-next-round", winner.Key));
-
-                        if (trigger == MapChangeTrigger.IgnoredWinConditions)
-                        {
-                            _debugLogger.LogInformation(
-                                "[EndMapVote] Armed ignored-win-conditions fallback timer. winner={Winner}",
-                                winner.Key
-                            );
-                            KillRoundEndChangeTimer();
-                            _lastIgnoredWinConditionsLoggedSecond = null;
-                            _roundEndChangeTimer = _plugin?.AddTimer(1.0F, () =>
-                            {
-                                try
-                                {
-                                    float currentTime = Server.CurrentTime;
-
-                                    if (!_gameRules.TryGetRoundTiming(out float roundDuration, out float roundStartTime))
-                                    {
-                                        _debugLogger.LogWarning(
-                                            "[EndMapVote] Ignored-win-conditions timer could not read round timing. winner={Winner} currentTime={CurrentTime} currentMap={CurrentMap}",
-                                            winner.Key,
-                                            currentTime,
-                                            Server.MapName
-                                        );
-                                        return;
-                                    }
-
-                                    int remainingSeconds = (int)Math.Ceiling(
-                                        Math.Max(0, roundDuration - (currentTime - roundStartTime))
-                                    );
-
-                                    if (remainingSeconds <= 10 && _lastIgnoredWinConditionsLoggedSecond != remainingSeconds)
-                                    {
-                                        _lastIgnoredWinConditionsLoggedSecond = remainingSeconds;
-                                        _debugLogger.LogInformation(
-                                            "[EndMapVote] Ignored-win-conditions countdown. winner={Winner} remainingSeconds={RemainingSeconds} roundDuration={RoundDuration} roundStartTime={RoundStartTime} currentTime={CurrentTime} currentMap={CurrentMap}",
-                                            winner.Key,
-                                            remainingSeconds,
-                                            roundDuration,
-                                            roundStartTime,
-                                            currentTime,
-                                            Server.MapName
-                                        );
-                                    }
-
-                                    if (remainingSeconds <= 3)
-                                    {
-                                        _debugLogger.LogInformation(
-                                            "[EndMapVote] Ignored-win-conditions fallback firing. winner={Winner} remainingSeconds={RemainingSeconds} roundDuration={RoundDuration} roundStartTime={RoundStartTime} currentTime={CurrentTime}",
-                                            winner.Key,
-                                            remainingSeconds,
-                                            roundDuration,
-                                            roundStartTime,
-                                            currentTime
-                                        );
-                                        if (_changeMapManager.ChangeNextMap(MapChangeTrigger.IgnoredWinConditions))
-                                            KillRoundEndChangeTimer();
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    _debugLogger.LogError(
-                                        ex,
-                                        "[EndMapVote] Ignored-win-conditions timer callback failed. winner={Winner} currentMap={CurrentMap} message={Message}",
-                                        winner.Key,
-                                        Server.MapName,
-                                        ex.Message
-                                    );
-                                }
-                            }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
-                        }
                     }
                 }
                 else
@@ -745,7 +855,7 @@ namespace cs2_rockthevote
                         var delay = _rtvConfig.MapChangeDelay;
                         if (delay <= 0) // Immediate
                         {
-                            _debugLogger.LogInformation("[EndMapVote] RTV map vote changing immediately. winner={Winner}", winner.Key);
+                            _debugLogger.LogInformation("[RTV.EndMapVote] RTV map vote changing immediately. winner={Winner}", winner.Key);
                             _changeMapManager.ChangeNextMap();
                         }
                         else // Timer for MapChangeDelay seconds

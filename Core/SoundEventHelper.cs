@@ -13,6 +13,13 @@ namespace cs2_rockthevote
 
         public static void PlaySound(CCSPlayerController player, string soundPath, float volume)
         {
+            if (player is null
+                || !player.IsValid
+                || player.Connected != PlayerConnectedState.Connected)
+            {
+                return;
+            }
+
             var recipients = new RecipientFilter(player);
 
             if (IsFullVolume(volume))

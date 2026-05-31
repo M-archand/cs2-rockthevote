@@ -111,7 +111,7 @@ General purpose map voting plugin.
     "EnabledInWarmup": true,
     "MenuType": "WasdnMenu", # The menu that will be used to show the vote. Options = ChatMenu, CenterHtmlMenu, WasdMenu, ConsoleMenu
     "NominateLimit": 1, # How many maps a single player can nominate per map vote
-    "Permission": "" # empty = anyone can use. "@css/vip" = only vip's can use (any perm allowed)
+    "Permission": "" # empty = anyone can use. "@css/vip" or "@css/admin,@css/mod" = any listed permission can use it
   },
   "Votemap": {
     "Enabled": false,
@@ -121,7 +121,7 @@ General purpose map voting plugin.
     "EnabledInWarmup": false,
     "MinPlayers": 0,
     "MinRounds": 0,
-    "Permission": "@css/vip" # empty = anyone can use. "@css/vip" = only vip's can use (any perm allowed)
+    "Permission": "@css/vip" # empty = anyone can use. "@css/vip" or "@css/admin,@css/mod" = any listed permission can use it
   },
   "VoteExtend": {
     "Enabled": false,
@@ -132,15 +132,15 @@ General purpose map voting plugin.
     "EnableCountdown": true,
     "CountdownType": "chat", # chat = prints to chat on an interval how much time is left in the vote. hud = persistent alert on the hud counting down as each second passes
     "ChatCountdownInterval": 15, # If CountdownType = chat, how often we print to chat how much time is remaining to vote
-    "Permission": "@css/vip" # empty = anyone can use. "@css/vip" = only vip's can use (any perm allowed)
+    "Permission": "@css/vip" # empty = anyone can use. "@css/vip" or "@css/admin,@css/mod" = any listed permission can use it
   },
   "MapChooser": {
     "Command": "mapmenu,mm", The command used to open the menu, multiple can be set
     "MenuType": "WasdMenu", # The menu that will be used to show the vote. Options = ChatMenu, CenterHtmlMenu, WasdMenu, ConsoleMenu
-    "Permission": "@css/root,@css/changemap" # empty = anyone can use. "@css/vip" = only vip's can use (any perm allowed)
+    "Permission": "@css/root,@css/changemap" # empty = anyone can use. any listed permission can use it
   },
   "General": {
-    "AdminPermission": "@css/root", # The permission required to use !reloadrtv or !reloadmaps
+    "AdminPermission": "@css/root,@css/admin", # Any listed permission can use !reloadrtv or !reloadmaps
     "MaxMapExtensions": 2,
     "RoundTimeExtension": 15, # How long the extension will be in minutes for !VoteExtend or End of Map Vote extension
     "MapsInCoolDown": 3, # How many recent maps that won't appear again in the End of Map Vote/can't be nominated (0 = no cooldown, but current map is always in cooldown)
@@ -151,7 +151,7 @@ General purpose map voting plugin.
   	"AFKCheckInterval": 60, # how often an AFK check occurs in seconds (compares players coordinates between current and last check, also run again when the vote is initiated)
     "EnableMapValidation": true, # true = the plugin will check if there are any workshop maps in your maplist.txt that are no longer on the workshop
     "SteamApiKey": "", # blank = use 1 request/second HTML checks. Set to a Steam Web API key to batch validation requests (100 IDs per call) Get one here: https://steamcommunity.com/dev/apikey
-    "DiscordWebhook": "" # blank = no alert. Discord Webhook added will alert you to any workshop maps in your maplist.txt that are no longer on the workshop
+    "DiscordWebhook": "" # blank = no alert. Discord Webhook will alert you to any workshop maps in your maplist.txt that are no longer on the workshop. Enter the enite "https://discord.com/api/webhooks/xxx" url
   }
 }
 ```

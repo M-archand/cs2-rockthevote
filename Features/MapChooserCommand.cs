@@ -1,6 +1,5 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CS2MenuManager.API.Class;
 using Microsoft.Extensions.Logging;
@@ -14,7 +13,7 @@ namespace cs2_rockthevote
         private readonly MapLister _mapLister;
         private Plugin? _plugin;
 
-        private string[] _permission = ["@css/root"];
+        private string[] _permissions = ["@css/root,@css/admin"];
         private MapChooserConfig _config = new();
 
         public MapChooserCommand(StringLocalizer localizer, MapLister mapLister, ILogger<MapChooserCommand> logger)
@@ -32,12 +31,7 @@ namespace cs2_rockthevote
         public void OnConfigParsed(Config config)
         {
             _config = config.MapChooser;
-            _permission = string.IsNullOrWhiteSpace(_config.Permission)
-            ? Array.Empty<string>()
-            : [.. _config.Permission
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Where(p => !string.IsNullOrWhiteSpace(p))
-                .Distinct(StringComparer.Ordinal)];
+            _permissions = _config.Permissions;
 
             if (string.IsNullOrWhiteSpace(_config.Command))
                 return;
@@ -56,9 +50,9 @@ namespace cs2_rockthevote
             if (player == null || !player.IsValid)
                 return;
 
-            if (_permission.Length > 0)
+            if (_permissions.Length > 0)
             {
-                bool allowed = _permission.Any(perm => AdminManager.PlayerHasPermissions(player, perm));
+                bool allowed = PermissionUtility.HasAny(player, _permissions);
                 if (!allowed)
                 {
                     player.PrintToChat(_localizer.LocalizeWithPrefix("general.incorrect.permission"));

@@ -87,6 +87,7 @@ namespace cs2_rockthevote
             StopRtvTimer();
             KillTimer();
             StopReminderTimer();
+            PanoramaVote.OnMapStart();
         }
 
         private bool TreatVotedPlayersAsActive() =>

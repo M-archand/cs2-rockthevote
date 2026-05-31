@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
 using CounterStrikeSharp.API.Modules.Events;
 using CounterStrikeSharp.API.Modules.UserMessages;
+using CounterStrikeSharp.API.Modules.Timers;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
 namespace cs2_rockthevote
@@ -89,6 +90,17 @@ namespace cs2_rockthevote
                 voteController.VoteOptionCount[3] = 0;
                 voteController.VoteOptionCount[4] = 0;
             }
+        }
+
+        /// Clears all vote states on map change.
+        public static void OnMapStart()
+        {
+            m_bIsVoteInProgress = false;
+            m_VoteHandler = null;
+            m_VoteResult = null;
+            m_szCurrentVoteTitle = string.Empty;
+            m_szCurrentVoteDetailStr = string.Empty;
+            VoteController = null;
         }
 
         /// Initializes the vote controller if a vote is not already in progress.
@@ -182,7 +194,7 @@ namespace cs2_rockthevote
         public static bool SendYesNoVoteToAll(float flDuration, int iCaller, string sVoteTitle, string sDetailStr, YesNoVoteResult resultCallback, YesNoVoteHandler? handler = null)
         {
             CurrentVotefilter.Clear();
-            foreach(var player in Utilities.GetPlayers().Where(p => p != null && p.IsValid && !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected))
+            foreach(var player in Utilities.GetPlayers().Where(p => p != null && p.IsValid && !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.Connected))
             {
                 CurrentVotefilter.Add(player);
             }
@@ -234,7 +246,7 @@ namespace cs2_rockthevote
             {
                 if (voteNum == m_iVoteCount)
                     EndVote(YesNoVoteEndReason.VoteEnd_TimeUp);
-            });
+            }, TimerFlags.STOP_ON_MAPCHANGE);
 
             return true;
         }
