@@ -1,0 +1,146 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from ModuleVersion
+        id: version
+        run: |
+          VERSION=$(grep -oP 'ModuleVersion\s*=>\s*\$?"\K[^"]+' Plugin.cs | head -n1)
+          if [ -z "$VERSION" ]; then
+            echo "::error::Could not find ModuleVersion in Plugin.cs"
+            exit 1
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Found version: $VERSION"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+          cache: true
+          cache-dependency-path: "**/*.csproj"
+
+      - name: Build RockTheVote plugin
+        run: |
+          dotnet restore RockTheVote.csproj
+          dotnet build RockTheVote.csproj -c Release --no-restore
+
+      - name: Assemble release package
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          FOLDER="RockTheVote-v${VERSION}"
+          PLUGIN_OUT="bin/Release/net10.0"
+
+          if [ ! -f "${PLUGIN_OUT}/RockTheVote.dll" ]; then
+            echo "::error::RockTheVote.dll not found in ${PLUGIN_OUT} after build"
+            exit 1
+          fi
+
+          # CSS install layout: archive root holds RockTheVote-v{version}/
+          #   addons/counterstrikesharp/plugins/RockTheVote/ -> plugin dll + deps + lang + maplist example
+          # Note: CS2MenuManager is a required separate dependency and is NOT bundled here.
+          rm -rf package
+          ROOT="package/${FOLDER}"
+          PLUGIN_DIR="${ROOT}/addons/counterstrikesharp/plugins/RockTheVote"
+          mkdir -p "${PLUGIN_DIR}"
+
+          # Plugin assembly + runtime deps manifest (pdb excluded)
+          cp "${PLUGIN_OUT}/RockTheVote.dll" "${PLUGIN_DIR}/"
+          cp "${PLUGIN_OUT}/RockTheVote.deps.json" "${PLUGIN_DIR}/"
+
+          # Resources
+          cp -r "${PLUGIN_OUT}/lang" "${PLUGIN_DIR}/"
+          cp "${PLUGIN_OUT}/maplist.example.txt" "${PLUGIN_DIR}/"
+
+          cd package
+          zip -r "../${FOLDER}.zip" "${FOLDER}"
+          cd ..
+          echo "Created ${FOLDER}.zip"
+
+      - name: Prepare release artifact
+        id: zip
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          ZIP_SRC=$(find . -name "RockTheVote-v${VERSION}.zip" -not -path "./release-artifacts/*" | head -1)
+          if [ -z "$ZIP_SRC" ]; then
+            echo "::error::RockTheVote-v${VERSION}.zip not found after build"
+            exit 1
+          fi
+          echo "Found zip: $ZIP_SRC"
+
+          mkdir -p release-artifacts
+          NEW_NAME="RockTheVote-v${VERSION}.zip"
+          mv "$ZIP_SRC" "release-artifacts/$NEW_NAME"
+          echo "artifact=release-artifacts/$NEW_NAME" >> $GITHUB_OUTPUT
+          echo "Prepared: $NEW_NAME"
+
+      - name: Determine release tag
+        id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          REPO_NAME="${{ github.event.repository.name }}"
+          BASE_TAG="v${VERSION}"
+          TAG="$BASE_TAG"
+          TITLE="${BASE_TAG}"
+          BUILD_NUM=1
+
+          while gh release view "$TAG" &>/dev/null; do
+            BUILD_NUM=$((BUILD_NUM + 1))
+            TAG="${BASE_TAG}-${BUILD_NUM}"
+            TITLE="${REPO_NAME} | ${BASE_TAG}#${BUILD_NUM}"
+            echo "Tag exists, trying: $TAG"
+          done
+
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
+          echo "Using tag: $TAG"
+
+      - name: Get previous tag for changelog link
+        id: prev_tag
+        run: |
+          PREV=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          echo "prev_tag=$PREV" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="${{ steps.tag.outputs.tag }}"
+          TITLE="${{ steps.tag.outputs.title }}"
+          PREV_TAG="${{ steps.prev_tag.outputs.prev_tag }}"
+
+          PRERELEASE_FLAG=""
+          if [[ "$VERSION" == *-* ]]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
+
+          NOTES="Release ${TAG}"
+          if [ -n "$PREV_TAG" ]; then
+            NOTES="${NOTES}"$'\n\n'"**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${TAG}"
+          fi
+
+          gh release create "$TAG" \
+            --title "$TITLE" \
+            --notes "$NOTES" \
+            $PRERELEASE_FLAG \
+            "${{ steps.zip.outputs.artifact }}"
+
+          echo "Release $TAG created successfully!"
