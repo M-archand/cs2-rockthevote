@@ -112,7 +112,6 @@ namespace cs2_rockthevote
                     {
                         _extendRoundTimeManager.ChatCountdown(_voteExtendConfig.VoteDuration);
                     }
-                    _extendRoundTimeManager.VoteCountdown();
 
                     PanoramaVote.SendYesNoVoteToAll(
                         _voteExtendConfig.VoteDuration,
