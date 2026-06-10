@@ -116,10 +116,24 @@ namespace cs2_rockthevote
                 .Where(n => n.Contains(partial, StringComparison.OrdinalIgnoreCase))];
         }
 
-        // Remove maps no longer available on the workshop
+        // Disable maps no longer available on the workshop from showing (maplist.txt is left untouched)
         public void PruneMaps(IEnumerable<Map> toRemove)
         {
-            Maps = [.. Maps.Where(m => !toRemove.Contains(m))];
+            var removeList = toRemove.ToList();
+            if (removeList.Count == 0)
+                return;
+
+            int before = Maps.Length;
+            Maps = [.. Maps.Where(m => !removeList.Any(r =>
+                string.Equals(r.Name, m.Name, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(r.Id, m.Id, StringComparison.Ordinal)))];
+
+            int removed = before - Maps.Length;
+            if (removed == 0)
+                return;
+
+            _debugLogger.LogInformation("[RTV.MapLister] Pruned {Removed} unavailable map(s) from the in-memory list; {Remaining} remain.", removed, Maps.Length);
+            EventMapsLoaded?.Invoke(this, Maps);
         }
     }
 }
