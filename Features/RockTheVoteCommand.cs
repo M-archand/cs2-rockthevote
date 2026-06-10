@@ -6,6 +6,7 @@ using CounterStrikeSharp.API.Modules.Utils;
 using CounterStrikeSharp.API.Modules.Timers;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace cs2_rockthevote
 {
@@ -230,6 +231,7 @@ namespace cs2_rockthevote
 
                 if (usePanorama)
                 {
+                    PanoramaVote.SetDebugLogger(_generalConfig.DebugLogging ? _logger : NullLogger<RockTheVoteCommand>.Instance);
                     PanoramaVote.Init();
                     Server.ExecuteCommand("sv_allow_votes 1");
                     Server.ExecuteCommand("sv_vote_allow_in_warmup 1");

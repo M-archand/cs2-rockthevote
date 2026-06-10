@@ -5,6 +5,7 @@ using CounterStrikeSharp.API.Modules.Timers;
 using cs2_rockthevote.Core;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
 namespace cs2_rockthevote
@@ -77,7 +78,7 @@ namespace cs2_rockthevote
                 player.PrintToChat(_localizer.LocalizeWithPrefix("rtv.cooldown", secondsInt));
                 return;
             }
-            if (_pluginState.DisableCommands || !_voteExtendConfig.Enabled)
+            if (_pluginState.DisableCommands)
             {
                 player.PrintToChat(_localizer.LocalizeWithPrefix("general.validation.disabled"));
                 return;
@@ -100,6 +101,7 @@ namespace cs2_rockthevote
                 }
                 else if (_voteExtendConfig.EnablePanorama)
                 {
+                    PanoramaVote.SetDebugLogger(_generalConfig.DebugLogging ? _logger : NullLogger<VoteExtendRoundTimeCommand>.Instance);
                     PanoramaVote.Init();
                     Server.ExecuteCommand("sv_allow_votes 1");
                     Server.ExecuteCommand("sv_vote_allow_in_warmup 1");

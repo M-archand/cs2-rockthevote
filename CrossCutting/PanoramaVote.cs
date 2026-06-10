@@ -5,6 +5,8 @@ using CounterStrikeSharp.API.Modules.Events;
 using CounterStrikeSharp.API.Modules.UserMessages;
 using CounterStrikeSharp.API.Modules.Timers;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace cs2_rockthevote
 {
@@ -68,6 +70,10 @@ namespace cs2_rockthevote
         public static CVoteController? VoteController { get; private set; } = null;
         private static RecipientFilter CurrentVotefilter = new RecipientFilter();
         private static Timer? m_VoteTimer = null;
+        private static ILogger _debugLogger = NullLogger.Instance;
+
+        /// Sets the debug logger used for diagnostic messages (gated by DebugLogging)
+        public static void SetDebugLogger(ILogger logger) => _debugLogger = logger;
 
         /// Resets the vote state, clearing any ongoing vote information.
         public static void Reset(CVoteController? voteController = null)
@@ -215,7 +221,7 @@ namespace cs2_rockthevote
 
             if (m_bIsVoteInProgress)
             {
-                Console.WriteLine($"[Vote Error] A vote is already in progress.");
+                _debugLogger.LogWarning("[PanoramaVote] A vote is already in progress.");
                 return false;
             }
 
