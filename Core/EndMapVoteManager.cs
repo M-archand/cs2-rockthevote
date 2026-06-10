@@ -171,6 +171,8 @@ namespace cs2_rockthevote
 
         private void KillHintEntities()
         {
+            bool hadHints = _hintOuterTimers.Count > 0 || _hintEntities.Count > 0;
+
             foreach (var t in _hintOuterTimers)
             {
                 try { t.Kill(); }
@@ -188,6 +190,23 @@ namespace cs2_rockthevote
                 catch (Exception ex) { _debugLogger.LogError(ex, "[Hint] Failed to kill hint entity"); }
             }
             _hintEntities.Clear();
+
+            // Restore instructor convar state directly since killing the timers above skips their cleanup
+            if (hadHints)
+            {
+                Server.ExecuteCommand("sv_gameinstructor_disable true");
+                foreach (var snapshot in ServerManager.ValidPlayers())
+                {
+                    int slot = snapshot.Slot;
+                    try
+                    {
+                        var live = Utilities.GetPlayerFromSlot(slot);
+                        if (live is not null && live.ReallyValid())
+                            live.ReplicateConVar("sv_gameinstructor_enable", "false");
+                    }
+                    catch (Exception ex) { _debugLogger.LogError(ex, "[Hint] Failed to restore instructor convar. slot={Slot}", slot); }
+                }
+            }
         }
 
         private bool ShouldPrintChatMapChoices()
@@ -612,7 +631,7 @@ namespace cs2_rockthevote
                 RemoveEntity(hint, seconds + 0.25f);
 
             int controllerSlot = controller.Slot;
-            _plugin?.AddTimer(5f, () =>
+            var convarResetTimer = _plugin?.AddTimer(5f, () =>
             {
                 try
                 {
@@ -626,6 +645,8 @@ namespace cs2_rockthevote
                     _debugLogger.LogError(ex, "[RTV.Hint] Cleanup timer failed. slot={Slot}", controllerSlot);
                 }
             }, TimerFlags.STOP_ON_MAPCHANGE);
+            if (convarResetTimer != null)
+                _hintOuterTimers.Add(convarResetTimer);
         }
 
         private void RemoveEntity(CEnvInstructorHint entity, float time = 0.0f)
