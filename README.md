@@ -1,10 +1,18 @@
+<div align="center">
+
 # CS2 RockTheVote (RTV)
+![GitHub Downloads](https://img.shields.io/github/downloads/M-archand/cs2-rockthevote/total?style=for-the-badge)
+
 General purpose map voting plugin.
+
+</div>
 
 # Features
 - Reads from a custom maplist
 - RTV Command (Using !rtv in chat, or with Panorama system that is built into CS2 [F1 = Yes, F2 = No])
 - End of Map Vote. Supports map cooldown, map extension option.
+- Map cooldown persistence. Recently played maps stay on cooldown across server restarts (stored in mapcooldown.txt).
+- !revote command. During an active End of Map Vote, lets a player reopen the menu to change their vote. Uses a frozen WASD menu with no exit, so they must make a selection. Re-typing !revote while the menu is open does nothing (vote already active). Toggled via EndOfMapVote.EnableRevote.
 - Nominate command (nominate a map to appear in the map vote). Partial name matching, and conflicting map name resolution (surf_beginner, surf_beginner2). Limit 1 per player.
 
   ![nominate](https://github.com/user-attachments/assets/6ac056bc-9842-4422-ac0d-c7cd814b3ba6)
@@ -35,7 +43,7 @@ General purpose map voting plugin.
 ![chatmenu](https://github.com/user-attachments/assets/8d7e9ee8-b26e-47b1-89d8-ced96b13a392)
 ![hudmenu](https://github.com/user-attachments/assets/0fd37e45-bf7f-4f97-9b7b-7fab92352392)
 
-- Maplist Validator. Send to error log or Discord when a map is no longer available on the workshop.
+- Maplist Validator. Send to error log or Discord when a map is no longer available on the workshop. Automatically removes invalid workshop maps from the in-memory map list so they can't be nominated, voted for, or switched to (maplist.txt is left untouched). Optionally set a Steam Web API key to batch validation (100 IDs per request) instead of 1 request/second HTML checks.
 
   ![MapDiscordWebhook](https://github.com/user-attachments/assets/eaf8d706-abd1-4258-a7a3-b9cb44500802)
   ![WorkshopMapLog](https://github.com/user-attachments/assets/2f65dd9d-1ee9-4217-a753-81358973df2e)
@@ -48,9 +56,9 @@ General purpose map voting plugin.
 
 
 ## Requirements
-[CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp) (Tested on v337)
+[CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp) (Tested on v369)
 
-[CS2MenuManager](https://github.com/schwarper/CS2MenuManager) (Tested on v39)
+[CS2MenuManager](https://github.com/schwarper/CS2MenuManager) (Tested on v42)
 
 # Installation
 - Download the latest release from https://github.com/M-archand/cs2-rockthevote/releases
@@ -64,7 +72,7 @@ General purpose map voting plugin.
 
 ```json
 {
-  "ConfigVersion": 22,
+  "ConfigVersion": 23,
   "Rtv": {
     "Enabled": true,
     "EnabledInWarmup": false,
@@ -74,6 +82,7 @@ General purpose map voting plugin.
     "ChangeAtRoundEnd": false, # false = use MapChangeDelay value below. true = wait until round end to change the map
     "MapChangeDelay": 5, # The delay in seconds after the rtv map vote has passed before the map is changed. 0 = immediate
     "SoundEnabled": false, # true = play a sound when the end of map vote starts.
+    "SoundVolume": 1.0, # Volume of the alert sound. For any value other than 1.0 you must use a soundevent_hash in SoundPath
     "SoundPath": "sounds/vo/announcer/cs2_classic/felix_broken_fang_pick_1_map_tk01.vsnd_c",
     "MapsToShow": 6, # How many maps to show in the resulting map vote if the rtv passes
     "AlwaysActive": true, # true = rtv vote is always running once triggered by an initional rtv. false = timed duration (RtvVoteDuration)
@@ -90,12 +99,14 @@ General purpose map voting plugin.
   },
   "EndOfMapVote": {
     "Enabled": true,
+    "EnableRevote": false, # true = players can type !revote to reopen the vote and change their choice (forced WASD menu, player frozen, no exit until they pick)
     "MapsToShow": 6, # How many maps to show in the vote. If IncludeExtendCurrentMap = true, the extension option takes up 1 slot
-    "MenuType": "WasdnMenu", # The menu that will be used to show the vote. Options = ChatMenu, CenterHtmlMenu, WasdMenu, ConsoleMenu
+    "MenuType": "WasdMenu", # The menu that will be used to show the vote. Options = ChatMenu, CenterHtmlMenu, WasdMenu, ConsoleMenu
     "ChangeMapImmediately": false, # false = change when the map ends. true = change as soon as the VoteDuration ends
     "VoteDuration": 150, # How long the map vote will last (this must be smaller than TriggerSecondsBeforeEnd)
     "SoundEnabled": false, # true = play a sound when the end of map vote starts.
-    "SoundPath": "sounds/vo/announcer/cs2_classic/felix_broken_fang_pick_1_map_tk01.vsnd_c", # Filepath of the sound you want to be played
+    "SoundVolume": 0.5, # Volume of the alert sound. For any value other than 1.0 you must use a soundevent_hash in SoundPath
+    "SoundPath": "1974266470", # Filepath or soundevent_hash of the sound you want to be played
     "TriggerSecondsBeforeEnd": 180, # When the End of Map Vote will be triggered (this must be higher than VoteDuration)
     "TriggerRoundsBeforeEnd": 0, # What round the vote is trigger on (use 0 for game modes like surf/bhop/etc or it'll never appear)
     "DelayToChangeInTheEnd": 0, # How long the mvp screen shows at the end if ChangeMapImmediately = false
@@ -103,19 +114,21 @@ General purpose map voting plugin.
     "EnableCountdown": false, # Whether the chat/hud countdown is enabled
     "CountdownType": "chat", # chat = prints to chat on an interval how much time is left in the vote. hud = persistent alert on the hud counting down as each second passes
     "ChatCountdownInterval": 30, # If CountdownType = chat, how often we print to chat how much time is remaining to vote
+    "ChatMapChoiceReminder": true, # Only applies when MenuType = ChatMenu. Periodically reprints the map choices and current vote tally to chat
+    "ChatMapChoiceInterval": 30, # How often (seconds) the ChatMenu map choices are reprinted
     "EnableHint": true, # Shows a message in the center of the screen notifying that the map vote has started
     "HintType": "csay" # csay = hud message in lower middle. GameHint = game instructor text in center middle
   },
   "Nominate": {
     "Enabled": true,
     "EnabledInWarmup": true,
-    "MenuType": "WasdnMenu", # The menu that will be used to show the vote. Options = ChatMenu, CenterHtmlMenu, WasdMenu, ConsoleMenu
+    "MenuType": "WasdMenu", # The menu that will be used to show the vote. Options = ChatMenu, CenterHtmlMenu, WasdMenu, ConsoleMenu
     "NominateLimit": 1, # How many maps a single player can nominate per map vote
     "Permission": "" # empty = anyone can use. "@css/vip" or "@css/admin,@css/mod" = any listed permission can use it
   },
   "Votemap": {
     "Enabled": false,
-    "MenuType": "WasdnMenu", # The menu that will be used to show the vote. Options = ChatMenu, CenterHtmlMenu, WasdMenu, ConsoleMenu
+    "MenuType": "WasdMenu", # The menu that will be used to show the vote. Options = ChatMenu, CenterHtmlMenu, WasdMenu, ConsoleMenu
     "VotePercentage": 50, # Percentage of votes required to pass the vote
     "ChangeMapImmediately": true,
     "EnabledInWarmup": false,
@@ -141,6 +154,7 @@ General purpose map voting plugin.
   },
   "General": {
     "AdminPermission": "@css/root,@css/admin", # Any listed permission can use !reloadrtv or !reloadmaps
+    "DebugLogging": false, # true = verbose debug logging to the CSS log (vote flow, map change, hint and validation details)
     "MaxMapExtensions": 2,
     "RoundTimeExtension": 15, # How long the extension will be in minutes for !VoteExtend or End of Map Vote extension
     "MapsInCoolDown": 3, # How many recent maps that won't appear again in the End of Map Vote/can't be nominated (0 = no cooldown, but current map is always in cooldown)
@@ -164,11 +178,9 @@ de_dust2
 ```
 
 # Roadmap
-- [ ] Automatically remove invalid workshop maps (currently only sends notification)
 - [ ] !extend max extension value
 - [ ] Add vote percentage required for winning map (e.g. must receive 25% of the vote)
 - [ ] Add vote runnoff (e.g. 2nd stage of voting between 2 maps if minimum vote percentage not achieved for a map)
-- [ ] Add !revote to allow players to change their vote
 
 # Translations
 | Language             |
@@ -184,5 +196,3 @@ de_dust2
 | Russian              |
 | Portuguese (BR)      |
 | Chinese (Simplified) |
-
-![GitHub Downloads](https://img.shields.io/github/downloads/M-archand/cs2-rockthevote/total?style=for-the-badge)
