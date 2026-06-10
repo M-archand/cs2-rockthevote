@@ -36,6 +36,7 @@ namespace cs2_rockthevote
         private readonly List<CEnvInstructorHint> _hintEntities = new();
         List<string> mapsElected = new();
         private readonly Dictionary<int, string> _playerVotes = new();
+        private readonly HashSet<int> _revoteMenuOpen = new();
         private readonly List<string> _currentVoteOptions = new();
         private int _canVote = 0;
         private bool _activeVoteIsRtv = false;
@@ -128,6 +129,7 @@ namespace cs2_rockthevote
         {
             Votes.Clear();
             _playerVotes.Clear();
+            _revoteMenuOpen.Clear();
             _currentVoteOptions.Clear();
             _sortedTopVotes = new();
             TimeLeft = 0;
@@ -325,7 +327,7 @@ namespace cs2_rockthevote
 
         private void OnRevoteCommand(CCSPlayerController? player, CommandInfo _)
         {
-            if (player == null || !player.IsValid)
+            if (player == null || !player.IsValid || player.UserId == null)
                 return;
 
             if (!_pluginState.EofVoteHappening || Timer is null || _currentVoteOptions.Count == 0)
@@ -334,8 +336,40 @@ namespace cs2_rockthevote
             if (!_endMapConfig.EnableRevote)
                 return;
 
+            // Already showing a revote menu for this player - their vote is active, ignore repeat requests
+            if (!_revoteMenuOpen.Add(player.UserId.Value))
+                return;
+
             int menuTimeLeft = Math.Max(TimeLeft, 1);
-            DisplayVoteMenu(player, _currentVoteOptions, menuTimeLeft, _activeVoteIsRtv, allowRevote: true);
+            DisplayRevoteMenu(player, _currentVoteOptions, menuTimeLeft, _activeVoteIsRtv);
+        }
+
+        // Revote always uses a frozen WASD menu with no exit button, forcing the player to make a selection
+        private void DisplayRevoteMenu(CCSPlayerController player, IEnumerable<string> voteOptions, int durationSeconds, bool isRtv)
+        {
+            if (_plugin == null || !player.IsValid)
+                return;
+
+            var title = _localizer.Localize("emv.hud.menu-title");
+            var menu = new WasdMenu(title, _plugin)
+            {
+                ExitButton = false,
+                WasdMenu_FreezePlayer = true
+            };
+
+            foreach (var option in voteOptions)
+            {
+                var chosen = option;
+                menu.AddItem(chosen, (p, _) =>
+                {
+                    if (p.UserId != null)
+                        _revoteMenuOpen.Remove(p.UserId.Value);
+
+                    MapVoted(p, chosen, isRtv, allowRevote: true);
+                });
+            }
+
+            menu.Display(player, durationSeconds);
         }
 
         private void DisplayVoteMenu(CCSPlayerController player, IEnumerable<string> voteOptions, int durationSeconds, bool isRtv, bool allowRevote)
@@ -630,6 +664,7 @@ namespace cs2_rockthevote
 
             VotedPlayers.Clear();
             _playerVotes.Clear();
+            _revoteMenuOpen.Clear();
             _currentVoteOptions.Clear();
             _activeVoteIsRtv = isRtv;
 
@@ -773,6 +808,7 @@ namespace cs2_rockthevote
 
             KillTimer();
             _currentVoteOptions.Clear();
+            _revoteMenuOpen.Clear();
 
             bool ignoreRoundWinConditions =
                 ConVar.Find("mp_ignore_round_win_conditions")?.GetPrimitiveValue<bool>() == true;
