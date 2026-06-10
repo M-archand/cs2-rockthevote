@@ -103,6 +103,7 @@ namespace cs2_rockthevote
         {
             RemoveListener<OnMapStart>(_dependencyManager.OnMapStart);
             _dependencyManager.OnPluginUnload(this);
+            PanoramaVote.Cleanup();
         }
 
         public void OnConfigParsed(Config config)

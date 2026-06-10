@@ -142,6 +142,8 @@ namespace cs2_rockthevote
 
         public void Unload(Plugin plugin)
         {
+            CloseAllActiveMenus();
+            _revoteMenuOpen.Clear();
             KillTimer();
             KillNextVoteTimer();
             KillChatMapChoiceTimer();
@@ -787,7 +789,7 @@ namespace cs2_rockthevote
             }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
         }
 
-        public void EndVote(bool isRtv)
+        private void CloseAllActiveMenus()
         {
             foreach (var snapshot in ServerManager.ValidPlayers())
             {
@@ -805,6 +807,11 @@ namespace cs2_rockthevote
                     _debugLogger.LogError(ex, "[RTV.EndMapVote] CloseActiveMenu failed. slot={Slot}", slot);
                 }
             }
+        }
+
+        public void EndVote(bool isRtv)
+        {
+            CloseAllActiveMenus();
 
             KillTimer();
             _currentVoteOptions.Clear();

@@ -102,7 +102,9 @@ namespace cs2_rockthevote
         }
 
         /// Clears all vote states on map change.
-        public static void OnMapStart()
+        public static void OnMapStart() => Cleanup();
+
+        public static void Cleanup()
         {
             m_VoteTimer?.Kill();
             m_VoteTimer = null;
