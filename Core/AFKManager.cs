@@ -100,7 +100,7 @@ namespace cs2_rockthevote
                     _lastOrigin[player.Index] = new Vector(origin.X, origin.Y, origin.Z);
 
                     if (_generalConfig.DebugLogging)
-                        Server.PrintToConsole($"[RTV-AFKManager] Checked position for player: {player.PlayerName}. Position: {origin}");
+                        Server.PrintToConsole($"[RTV.AFKManager] Checked position for player: {player.PlayerName}. Position: {origin}");
                 }
             }, TimerFlags.STOP_ON_MAPCHANGE);
         }

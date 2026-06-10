@@ -60,7 +60,7 @@ namespace cs2_rockthevote
             }
             catch (Exception ex)
             {
-                _debugLogger.LogError(ex, "Failed to reload map list via css_reloadmaps.");
+                _debugLogger.LogError(ex, "[RTV.ReloadMaps] Failed to reload map list via css_reloadmaps.");
                 command.ReplyToCommand($"[RTV] {ChatColors.Red}Failed to reload map list. Check server logs for details.");
             }
         }

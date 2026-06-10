@@ -51,7 +51,7 @@ namespace cs2_rockthevote
 
             if (maps == null || maps.Count == 0)
             {
-                _logger.LogInformation("[Map-Checker] No maps to validate");
+                _logger.LogInformation("[RTV.MapChecker] No maps to validate");
                 return;
             }
 
@@ -60,7 +60,7 @@ namespace cs2_rockthevote
             {
                 if (!ulong.TryParse(map.Id, out var publishedFileId))
                 {
-                    _logger.LogInformation($"[Map-Checker] could not parse ID for \"{map.Name}\": \"{map.Id}\"");
+                    _logger.LogInformation($"[RTV.MapChecker] could not parse ID for \"{map.Name}\": \"{map.Id}\"");
                     continue;
                 }
 
@@ -69,7 +69,7 @@ namespace cs2_rockthevote
 
             if (workshopMaps.Count == 0)
             {
-                _logger.LogInformation("[Map-Checker] No workshop maps to validate");
+                _logger.LogInformation("[RTV.MapChecker] No workshop maps to validate");
                 return;
             }
 
@@ -104,7 +104,7 @@ namespace cs2_rockthevote
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"[Map-Checker] ERROR checking {map.Name}: {ex.Message}");
+                    _logger.LogError($"[RTV.MapChecker] ERROR checking {map.Name}: {ex.Message}");
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(1)).ConfigureAwait(false); // avoid rate limiting when using html
@@ -133,7 +133,7 @@ namespace cs2_rockthevote
 
                     if (!response.IsSuccessStatusCode)
                     {
-                        _logger.LogError($"[Map-Checker] ERROR validating map batch via Steam Web API: {response.StatusCode} ({response.ReasonPhrase})");
+                        _logger.LogError($"[RTV.MapChecker] ERROR validating map batch via Steam Web API: {response.StatusCode} ({response.ReasonPhrase})");
                         continue;
                     }
 
@@ -143,7 +143,7 @@ namespace cs2_rockthevote
 
                     if (details == null)
                     {
-                        _logger.LogError("[Map-Checker] Unexpected response while validating workshop maps via Steam Web API");
+                        _logger.LogError("[RTV.MapChecker] Unexpected response while validating workshop maps via Steam Web API");
                         continue;
                     }
 
@@ -151,7 +151,7 @@ namespace cs2_rockthevote
                     {
                         if (!ulong.TryParse(detail.PublishedFileId, out var detailId))
                         {
-                            _logger.LogError($"[Map-Checker] Unexpected publishedfileid value in Steam Web API response: \"{detail.PublishedFileId}\"");
+                            _logger.LogError($"[RTV.MapChecker] Unexpected publishedfileid value in Steam Web API response: \"{detail.PublishedFileId}\"");
                             continue;
                         }
 
@@ -165,7 +165,7 @@ namespace cs2_rockthevote
                                 .Select(b => b.Map.Name)
                                 .Distinct());
                             var mapLabel = string.IsNullOrWhiteSpace(mapNames) ? "Unknown map" : mapNames;
-                            _logger.LogInformation($"[Map-Checker] {mapLabel}:{detailId} is unlisted; skipping missing check");
+                            _logger.LogInformation($"[RTV.MapChecker] {mapLabel}:{detailId} is unlisted; skipping missing check");
                             continue;
                         }
 
@@ -176,13 +176,13 @@ namespace cs2_rockthevote
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError($"[Map-Checker] ERROR double-checking {detailId} via HTML: {ex.Message}");
+                            _logger.LogError($"[RTV.MapChecker] ERROR double-checking {detailId} via HTML: {ex.Message}");
                             exists = false;
                         }
 
                         if (exists)
                         {
-                            _logger.LogInformation($"[Map-Checker] {detailId} returned non-OK from Steam Web API but is accessible; skipping missing");
+                            _logger.LogInformation($"[RTV.MapChecker] {detailId} returned non-OK from Steam Web API but is accessible; skipping missing");
                             await Task.Delay(TimeSpan.FromSeconds(2)).ConfigureAwait(false); // avoid rate limiting for html checks
                             continue;
                         }
@@ -197,14 +197,14 @@ namespace cs2_rockthevote
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"[Map-Checker] ERROR validating map batch via Steam Web API: {ex.Message}");
+                    _logger.LogError($"[RTV.MapChecker] ERROR validating map batch via Steam Web API: {ex.Message}");
                 }
             }
         }
 
         private async Task HandleMissingMapAsync(Map map, ulong publishedFileId)
         {
-            _logger.LogWarning($"[Map-Checker] ⚠️ {map.Name} (WorkshopID {publishedFileId}) does not exist!");
+            _logger.LogWarning($"[RTV.MapChecker] ⚠️ {map.Name} (WorkshopID {publishedFileId}) does not exist!");
 
             Server.NextWorldUpdate(() => _mapLister.PruneMaps(new[] { map }));
 
@@ -225,7 +225,7 @@ namespace cs2_rockthevote
             }
             catch (Exception ex)
             {
-                _logger.LogError($"[Map-Checker] Failed to send Discord webhook: {ex.Message}");
+                _logger.LogError($"[RTV.MapChecker] Failed to send Discord webhook: {ex.Message}");
             }
         }
 

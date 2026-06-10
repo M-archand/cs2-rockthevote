@@ -86,7 +86,7 @@ namespace cs2_rockthevote
 
             if (!uint.TryParse(_config.SoundPath, out _) && !SoundEventHelper.IsFullVolume(_config.SoundVolume))
             {
-                _logger.LogWarning("To modify the sound volume (any value aside from 1) you need to use the soundevent_hash rather than the sound path. E.g. 1974266470 for felix_broken_fang_pick_1_map_tk01");
+                _logger.LogWarning("[RTV.rtvCommand] To modify the sound volume (any value aside from 1) you need to use the soundevent_hash rather than the sound path. E.g. 1974266470 for felix_broken_fang_pick_1_map_tk01");
             }
         }
 
@@ -367,7 +367,7 @@ namespace cs2_rockthevote
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Something went wrong with the rtv command: {Message}", ex.Message);
+                _logger.LogWarning(ex, "[RTV.rtvCommand] Something went wrong with the rtv command: {Message}", ex.Message);
             }
         }
 
@@ -450,7 +450,7 @@ namespace cs2_rockthevote
                                     }
                                     catch (Exception ex)
                                     {
-                                        _logger.LogError(ex, "Error during early vote pass: {Message}", ex.Message);
+                                        _logger.LogError(ex, "[RTV.rtvCommand] Error during early vote pass: {Message}", ex.Message);
                                     }
                                 });
                                 return;
@@ -459,7 +459,7 @@ namespace cs2_rockthevote
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Error processing vote: {Message}", ex.Message);
+                        _logger.LogError(ex, "[RTV.rtvCommand] Error processing vote: {Message}", ex.Message);
                     }
                     break;
 
@@ -499,7 +499,7 @@ namespace cs2_rockthevote
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "ChatCountdown timer callback failed: {Message}", ex.Message);
+                        _logger.LogError(ex, "[RTV.rtvCommand] ChatCountdown timer callback failed: {Message}", ex.Message);
                     }
                 }, TimerFlags.STOP_ON_MAPCHANGE
             );
@@ -525,7 +525,7 @@ namespace cs2_rockthevote
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "RTV reminder failed: {Message}", ex.Message);
+                        _logger.LogError(ex, "[RTV.rtvCommand] RTV reminder failed: {Message}", ex.Message);
                     }
                 },
                 TimerFlags.STOP_ON_MAPCHANGE | TimerFlags.REPEAT

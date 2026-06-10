@@ -41,7 +41,7 @@ namespace cs2_rockthevote
     {
         public override string ModuleName => "RockTheVote";
         public override string ModuleVersion => "2.1.5";
-        public override string ModuleAuthor => "abnerfs (Updated by Marchand)";
+        public override string ModuleAuthor => "abnerfs, Marchand";
 
         private readonly DependencyManager<Plugin, Config> _dependencyManager = dependencyManager;
         private readonly NominationCommand _nominationManager = nominationManager;
@@ -112,7 +112,7 @@ namespace cs2_rockthevote
             _dependencyManager.OnConfigParsed(config);
 
             if (config.Version != Config.CurrentVersion)
-                Logger.LogWarning("Configuration version mismatch (Expected: {ExpectedVersion} | Current: {CurrentVersion})", Config.CurrentVersion, config.Version);
+                Logger.LogWarning("[RTV] Configuration version mismatch (Expected: {ExpectedVersion} | Current: {CurrentVersion})", Config.CurrentVersion, config.Version);
         }
 
         /*

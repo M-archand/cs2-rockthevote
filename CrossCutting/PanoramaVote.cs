@@ -223,7 +223,7 @@ namespace cs2_rockthevote
 
             if (m_bIsVoteInProgress)
             {
-                _debugLogger.LogWarning("[PanoramaVote] A vote is already in progress.");
+                _debugLogger.LogWarning("[RTV.PanoramaVote] A vote is already in progress.");
                 return false;
             }
 

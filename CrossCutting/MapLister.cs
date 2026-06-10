@@ -30,7 +30,7 @@ namespace cs2_rockthevote
 
             if (_plugin is null)
             {
-                _debugLogger.LogWarning("[MapLister] LoadMaps called before plugin was assigned.");
+                _debugLogger.LogWarning("[RTV.MapLister] LoadMaps called before plugin was assigned.");
                 return;
             }
 
@@ -39,11 +39,11 @@ namespace cs2_rockthevote
 
             if (!File.Exists(mapsFile))
             {
-                _debugLogger.LogError("[MapLister] Missing required map list file at {MapListPath}.", mapsFile);
+                _debugLogger.LogError("[RTV.MapLister] Missing required map list file at {MapListPath}.", mapsFile);
                 if (File.Exists(exampleFile))
                 {
                     _debugLogger.LogInformation(
-                        "[MapLister] Example map list found at {ExamplePath}. Copy or rename it to {MapListPath}.",
+                        "[RTV.MapLister] Example map list found at {ExamplePath}. Copy or rename it to {MapListPath}.",
                         exampleFile,
                         mapsFile
                     );
@@ -70,12 +70,12 @@ namespace cs2_rockthevote
                     })];
 
                 MapsLoaded = true;
-                _debugLogger.LogInformation("[MapLister] Loaded {MapCount} maps from {MapListPath}.", Maps.Length, mapsFile);
+                _debugLogger.LogInformation("[RTV.MapLister] Loaded {MapCount} maps from {MapListPath}.", Maps.Length, mapsFile);
             }
             catch (Exception ex)
             {
                 Clear();
-                _debugLogger.LogError(ex, "[MapLister] Failed to load map list from {MapListPath}.", mapsFile);
+                _debugLogger.LogError(ex, "[RTV.MapLister] Failed to load map list from {MapListPath}.", mapsFile);
                 Server.PrintToConsole($"[RTV] Failed to load maplist.txt: {ex.Message}");
             }
 

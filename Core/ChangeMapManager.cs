@@ -68,7 +68,7 @@ namespace cs2_rockthevote
             _changeTrigger = trigger;
 
             _debugLogger.LogInformation(
-                "[MapChange] Scheduled. map={Map} trigger={Trigger} prefix={Prefix} currentMap={CurrentMap}",
+                "[RTV.MapChange] Scheduled. map={Map} trigger={Trigger} prefix={Prefix} currentMap={CurrentMap}",
                 map,
                 trigger,
                 prefix,
@@ -108,7 +108,7 @@ namespace cs2_rockthevote
             if (trigger != _changeTrigger)
             {
                 _debugLogger.LogInformation(
-                    "[MapChange] Ignored trigger mismatch. requested={RequestedTrigger} scheduled={ScheduledTrigger} map={Map}",
+                    "[RTV.MapChange] Ignored trigger mismatch. requested={RequestedTrigger} scheduled={ScheduledTrigger} map={Map}",
                     trigger,
                     _changeTrigger,
                     NextMap
@@ -127,7 +127,7 @@ namespace cs2_rockthevote
             if (_pendingMapChangeTimer is not null)
             {
                 _debugLogger.LogInformation(
-                    "[MapChange] Already pending. map={Map} trigger={Trigger}",
+                    "[RTV.MapChange] Already pending. map={Map} trigger={Trigger}",
                     NextMap,
                     _changeTrigger
                 );
@@ -137,7 +137,7 @@ namespace cs2_rockthevote
             Map? map = _maps.FirstOrDefault(x => string.Equals(x.Name, NextMap, StringComparison.OrdinalIgnoreCase));
             if (map == null)
             {
-                _debugLogger.LogWarning("[MapChange] Could not resolve map object. map={Map}", NextMap);
+                _debugLogger.LogWarning("[RTV.MapChange] Could not resolve map object. map={Map}", NextMap);
                 return false;
             }
 
@@ -150,7 +150,7 @@ namespace cs2_rockthevote
             if (delaySeconds <= 0)
             {
                 _debugLogger.LogInformation(
-                    "[MapChange] Executing immediately. map={Map} trigger={Trigger} currentMap={CurrentMap}",
+                    "[RTV.MapChange] Executing immediately. map={Map} trigger={Trigger} currentMap={CurrentMap}",
                     map.Name,
                     _changeTrigger,
                     mapBefore
@@ -160,7 +160,7 @@ namespace cs2_rockthevote
             }
 
             _debugLogger.LogInformation(
-                "[MapChange] Arming change timer. map={Map} trigger={Trigger} delaySeconds={DelaySeconds} currentMap={CurrentMap}",
+                "[RTV.MapChange] Arming change timer. map={Map} trigger={Trigger} delaySeconds={DelaySeconds} currentMap={CurrentMap}",
                 map.Name,
                 _changeTrigger,
                 delaySeconds,
@@ -172,7 +172,7 @@ namespace cs2_rockthevote
                 try
                 {
                     _debugLogger.LogInformation(
-                        "[MapChange] Delayed change timer fired. map={Map} trigger={Trigger} currentMap={CurrentMap}",
+                        "[RTV.MapChange] Delayed change timer fired. map={Map} trigger={Trigger} currentMap={CurrentMap}",
                         map.Name,
                         _changeTrigger,
                         Server.MapName
@@ -185,7 +185,7 @@ namespace cs2_rockthevote
                     _pendingMapChangeTimer = null;
                     _debugLogger.LogError(
                         ex,
-                        "[MapChange] Delayed change timer callback failed. map={Map} trigger={Trigger} currentMap={CurrentMap} message={Message}",
+                        "[RTV.MapChange] Delayed change timer callback failed. map={Map} trigger={Trigger} currentMap={CurrentMap} message={Message}",
                         map.Name,
                         _changeTrigger,
                         Server.MapName,
@@ -197,7 +197,7 @@ namespace cs2_rockthevote
             if (_pendingMapChangeTimer is null)
             {
                 _logger.LogError(
-                    "[MapChange] AddTimer returned null - plugin reference is null. Cannot schedule map change. map={Map}",
+                    "[RTV.MapChange] AddTimer returned null - plugin reference is null. Cannot schedule map change. map={Map}",
                     map.Name
                 );
                 return false;
@@ -215,7 +215,7 @@ namespace cs2_rockthevote
                 ConVar.Find("mp_timelimit")?.SetValue(0f);
 
                 _debugLogger.LogInformation(
-                    "[MapChange] Evaluating command path. map={Map} mapId={MapId} previousMap={PreviousMap}",
+                    "[RTV.MapChange] Evaluating command path. map={Map} mapId={MapId} previousMap={PreviousMap}",
                     map.Name,
                     map.Id,
                     mapBefore
@@ -224,7 +224,7 @@ namespace cs2_rockthevote
                 bool mapNameIsValid = Server.IsMapValid(map.Name);
 
                 _debugLogger.LogInformation(
-                    "[MapChange] IsMapValid evaluated. map={Map} result={IsValid}",
+                    "[RTV.MapChange] IsMapValid evaluated. map={Map} result={IsValid}",
                     map.Name,
                     mapNameIsValid
                 );
@@ -232,7 +232,7 @@ namespace cs2_rockthevote
                 if (mapNameIsValid)
                 {
                     _debugLogger.LogInformation(
-                        "[MapChange] Executing changelevel. map={Map} previousMap={PreviousMap}",
+                        "[RTV.MapChange] Executing changelevel. map={Map} previousMap={PreviousMap}",
                         map.Name,
                         mapBefore
                     );
@@ -241,7 +241,7 @@ namespace cs2_rockthevote
                 else if (map.Id is not null)
                 {
                     _debugLogger.LogInformation(
-                        "[MapChange] Executing host_workshop_map. map={Map} workshopId={WorkshopId} previousMap={PreviousMap}",
+                        "[RTV.MapChange] Executing host_workshop_map. map={Map} workshopId={WorkshopId} previousMap={PreviousMap}",
                         map.Name,
                         map.Id,
                         mapBefore
@@ -251,7 +251,7 @@ namespace cs2_rockthevote
                 else
                 {
                     _debugLogger.LogInformation(
-                        "[MapChange] Executing ds_workshop_changelevel. map={Map} previousMap={PreviousMap}",
+                        "[RTV.MapChange] Executing ds_workshop_changelevel. map={Map} previousMap={PreviousMap}",
                         map.Name,
                         mapBefore
                     );
@@ -264,7 +264,7 @@ namespace cs2_rockthevote
             {
                 _debugLogger.LogError(
                     ex,
-                    "[MapChange] ExecuteMapChangeCommand failed. map={Map} mapId={MapId} previousMap={PreviousMap} message={Message}",
+                    "[RTV.MapChange] ExecuteMapChangeCommand failed. map={Map} mapId={MapId} previousMap={PreviousMap} message={Message}",
                     map.Name,
                     map.Id,
                     mapBefore,
@@ -287,7 +287,7 @@ namespace cs2_rockthevote
                     if (string.Equals(current, mapBefore, StringComparison.OrdinalIgnoreCase))
                     {
                         _debugLogger.LogWarning(
-                            "[MapChange] Verify timer found unchanged map. requestedMap={RequestedMap} currentMap={CurrentMap}",
+                            "[RTV.MapChange] Verify timer found unchanged map. requestedMap={RequestedMap} currentMap={CurrentMap}",
                             map.Name,
                             current
                         );
@@ -308,7 +308,7 @@ namespace cs2_rockthevote
                         if (candidates.Count == 0)
                         {
                             _debugLogger.LogWarning(
-                                "[MapChange] Fallback selection failed. currentMap={CurrentMap} requestedMap={RequestedMap}",
+                                "[RTV.MapChange] Fallback selection failed. currentMap={CurrentMap} requestedMap={RequestedMap}",
                                 current,
                                 map.Name
                             );
@@ -320,7 +320,7 @@ namespace cs2_rockthevote
                         var fallback = candidates[random.Next(candidates.Count)];
 
                         _debugLogger.LogWarning(
-                            "[MapChange] Attempting fallback map. fallbackMap={FallbackMap} previousRequestedMap={RequestedMap} currentMap={CurrentMap}",
+                            "[RTV.MapChange] Attempting fallback map. fallbackMap={FallbackMap} previousRequestedMap={RequestedMap} currentMap={CurrentMap}",
                             fallback.Name,
                             map.Name,
                             current
@@ -330,13 +330,13 @@ namespace cs2_rockthevote
 
                         if (Server.IsMapValid(fallback.Name))
                         {
-                            _debugLogger.LogInformation("[MapChange] Executing fallback changelevel. map={Map}", fallback.Name);
+                            _debugLogger.LogInformation("[RTV.MapChange] Executing fallback changelevel. map={Map}", fallback.Name);
                             Server.ExecuteCommand($"changelevel {fallback.Name}");
                         }
                         else if (fallback.Id is not null)
                         {
                             _debugLogger.LogInformation(
-                                "[MapChange] Executing fallback host_workshop_map. map={Map} workshopId={WorkshopId}",
+                                "[RTV.MapChange] Executing fallback host_workshop_map. map={Map} workshopId={WorkshopId}",
                                 fallback.Name,
                                 fallback.Id
                             );
@@ -344,14 +344,14 @@ namespace cs2_rockthevote
                         }
                         else
                         {
-                            _debugLogger.LogInformation("[MapChange] Executing fallback ds_workshop_changelevel. map={Map}", fallback.Name);
+                            _debugLogger.LogInformation("[RTV.MapChange] Executing fallback ds_workshop_changelevel. map={Map}", fallback.Name);
                             Server.ExecuteCommand($"ds_workshop_changelevel {fallback.Name}");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    _debugLogger.LogError(ex, "[MapChange] Fallback verify timer failed: {Message}", ex.Message);
+                    _debugLogger.LogError(ex, "[RTV.MapChange] Fallback verify timer failed: {Message}", ex.Message);
                     Server.PrintToConsole($"[RTV] Fallback map change check error: {ex.Message}");
                 }
             }, TimerFlags.STOP_ON_MAPCHANGE); // auto-kill if map did change
@@ -369,7 +369,7 @@ namespace cs2_rockthevote
             plugin.RegisterEventHandler<EventCsWinPanelMatch>((ev, info) =>
             {
                 _debugLogger.LogInformation(
-                    "[MapChange] EventCsWinPanelMatch fired by engine. mapChangeScheduled={Scheduled} trigger={Trigger} nextMap={NextMap} currentMap={CurrentMap}",
+                    "[RTV.MapChange] EventCsWinPanelMatch fired by engine. mapChangeScheduled={Scheduled} trigger={Trigger} nextMap={NextMap} currentMap={CurrentMap}",
                     _pluginState.MapChangeScheduled,
                     _changeTrigger,
                     NextMap,
@@ -383,7 +383,7 @@ namespace cs2_rockthevote
                         delay = 1.0F;
 
                     _debugLogger.LogInformation(
-                        "[MapChange] Match-end win panel received. map={Map} delaySeconds={DelaySeconds}",
+                        "[RTV.MapChange] Match-end win panel received. map={Map} delaySeconds={DelaySeconds}",
                         NextMap,
                         delay
                     );
