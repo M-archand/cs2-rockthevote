@@ -44,6 +44,7 @@ namespace cs2_rockthevote
     {
         private readonly ILogger<NominationCommand> _logger;
         Dictionary<int, List<string>> Nominations = new();
+        private string? _nominationsMap;
         private NominateConfig _nomConfig = new();
         private GameRules _gamerules;
         private StringLocalizer _localizer;
@@ -64,7 +65,12 @@ namespace cs2_rockthevote
 
         public void OnMapStart(string map)
         {
+            // Clear only on a map change, not when an extension wins
+            if (_nominationsMap != null && string.Equals(_nominationsMap, map, StringComparison.OrdinalIgnoreCase))
+                return;
+
             Nominations.Clear();
+            _nominationsMap = map;
         }
         public void OnLoad(Plugin plugin)
         {
