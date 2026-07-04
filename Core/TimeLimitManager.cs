@@ -1,5 +1,4 @@
 using CounterStrikeSharp.API;
-using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Cvars;
 
 namespace cs2_rockthevote.Core
@@ -8,8 +7,6 @@ namespace cs2_rockthevote.Core
     {
         private GameRules _gameRules = gameRules;
         private ConVar? _timeLimit;
-        private float _timelimitStartTime = 0f;
-        private bool _timelimitStarted = false;
         private decimal TimeLimitValue => (decimal)(_timeLimit?.GetPrimitiveValue<float>() ?? 0F) * 60M;
         public bool UnlimitedTime => TimeLimitValue <= 0;
 
@@ -17,10 +14,14 @@ namespace cs2_rockthevote.Core
         {
             get
             {
-                if (_gameRules.WarmupRunning || !_timelimitStarted)
+                if (_gameRules.WarmupRunning)
                     return 0;
 
-                return (decimal)(Server.CurrentTime - _timelimitStartTime);
+                float gameStartTime = _gameRules.GameStartTime;
+                if (gameStartTime <= 0)
+                    return 0;
+
+                return (decimal)(Server.CurrentTime - gameStartTime);
             }
         }
 
@@ -45,29 +46,11 @@ namespace cs2_rockthevote.Core
         public void OnMapStart(string map)
         {
             LoadCvar();
-            _timelimitStartTime = 0f;
-            _timelimitStarted = false;
         }
 
         public void OnLoad(Plugin plugin)
         {
             LoadCvar();
-            plugin.RegisterEventHandler<EventRoundStart>((ev, info) =>
-            {
-                if (!_timelimitStarted)
-                {
-                    bool hasPlayers = Utilities.GetPlayers().Any(p =>
-                        p.IsValid && !p.IsBot && !p.IsHLTV &&
-                        p.Connected == PlayerConnectedState.Connected);
-
-                    if (hasPlayers)
-                    {
-                        _timelimitStartTime = Server.CurrentTime;
-                        _timelimitStarted = true;
-                    }
-                }
-                return HookResult.Continue;
-            });
         }
     }
 }

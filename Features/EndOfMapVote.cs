@@ -67,7 +67,7 @@ namespace cs2_rockthevote
 
         public void OnMapStart(string map)
         {
-            KillTimer();
+            RestartTimer();
         }
 
         public void Unload(Plugin plugin)
@@ -85,10 +85,7 @@ namespace cs2_rockthevote
         {
             KillTimer();
 
-            if (_plugin is null || _timeLimit.UnlimitedTime || !_config.Enabled)
-                return;
-
-            if (_gameRules?.WarmupRunning == true || _pluginState.DisableCommands)
+            if (_plugin is null || !_config.Enabled)
                 return;
 
             _timer = _plugin.AddTimer(1.0F, () =>
