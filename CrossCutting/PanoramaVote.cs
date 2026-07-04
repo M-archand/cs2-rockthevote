@@ -174,7 +174,7 @@ namespace cs2_rockthevote
             if (!m_bIsVoteInProgress)
                 return false;
 
-            if (iSlot < 0 || iSlot > m_iVoterCount)
+            if (iSlot < 0 || iSlot >= VoteConstants.MAXPLAYERS)
                 return false;
 
             return m_iVoters.Contains(iSlot);
