@@ -99,8 +99,8 @@ namespace cs2_rockthevote
                 return;
             }
             
-            int userId = player.UserId!.Value;
-            int existingCount = Nominations.TryGetValue(userId, out var userNoms) ? userNoms.Count : 0;
+            int slot = player.Slot;
+            int existingCount = Nominations.TryGetValue(slot, out var userNoms) ? userNoms.Count : 0;
             if (_nomConfig.NominateLimit > 0 && existingCount >= _nomConfig.NominateLimit)
             {
                 player.PrintToChat(_localizer.LocalizeWithPrefix("nominate.limit", _nomConfig.NominateLimit));
@@ -176,18 +176,18 @@ namespace cs2_rockthevote
 
         public void Nominate(CCSPlayerController player, string map)
         {
-            if (player == null || !player.IsValid || player.UserId == null)
+            if (player == null || !player.IsValid)
                 return;
 
-            var userId  = player.UserId!.Value;
+            var slot = player.Slot;
             var mapName = map.Trim();
             var baseName = GetBaseMapName(mapName);
 
             // Ensure per-player list exists
-            if (!Nominations.TryGetValue(userId, out var userNoms))
+            if (!Nominations.TryGetValue(slot, out var userNoms))
             {
                 userNoms = new List<string>();
-                Nominations[userId] = userNoms;
+                Nominations[slot] = userNoms;
             }
 
             // Respect warmup here too (so menu + chat behave the same)
@@ -304,11 +304,10 @@ namespace cs2_rockthevote
 
         public void PlayerDisconnected(CCSPlayerController player)
         {
-            if (player?.UserId == null)
+            if (player == null)
                 return;
 
-            int userId = player.UserId!.Value;
-            Nominations.Remove(userId);
+            Nominations.Remove(player.Slot);
         }
     }
 }
