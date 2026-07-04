@@ -23,8 +23,8 @@ namespace cs2_rockthevote
     {
         private Plugin? _plugin;
         private GeneralConfig _generalConfig = new();
-        private readonly Dictionary<uint, Vector> _lastOrigin = new();
-        private readonly HashSet<uint> _afkPlayers = new();
+        private readonly Dictionary<int, Vector> _lastOrigin = new();
+        private readonly HashSet<int> _afkPlayers = new();
         private Timer? _timer;
         private DateTime _lastCheckUtc = DateTime.MinValue;
 
@@ -88,7 +88,7 @@ namespace cs2_rockthevote
                 if (player == null || !player.IsValid || !player.ReallyValid())
                     return;
 
-                _afkPlayers.Remove(player.Index);
+                _afkPlayers.Remove(player.Slot);
 
                 var pawn = player.PlayerPawn?.Value;
                 if (pawn is null || !pawn.IsValid)
@@ -97,7 +97,7 @@ namespace cs2_rockthevote
                 var origin = pawn.CBodyComponent?.SceneNode?.AbsOrigin;
                 if (origin != null)
                 {
-                    _lastOrigin[player.Index] = new Vector(origin.X, origin.Y, origin.Z);
+                    _lastOrigin[player.Slot] = new Vector(origin.X, origin.Y, origin.Z);
 
                     if (_generalConfig.DebugLogging)
                         Server.PrintToConsole($"[RTV.AFKManager] Checked position for player: {player.PlayerName}. Position: {origin}");
@@ -116,7 +116,7 @@ namespace cs2_rockthevote
                 if (origin == null) continue;
 
                 var current = new Vector(origin.X, origin.Y, origin.Z);
-                var idx = player.Index;
+                var idx = player.Slot;
 
                 if (_lastOrigin.TryGetValue(idx, out var last))
                 {
@@ -154,7 +154,7 @@ namespace cs2_rockthevote
             if (player == null || !player.IsValid || !player.ReallyValid())
                 return false;
 
-            _afkPlayers.Remove(player.Index);
+            _afkPlayers.Remove(player.Slot);
 
             var pawn = player.PlayerPawn?.Value;
             if (pawn is null || !pawn.IsValid)
@@ -162,17 +162,17 @@ namespace cs2_rockthevote
 
             var origin = pawn.CBodyComponent?.SceneNode?.AbsOrigin;
             if (origin != null)
-                _lastOrigin[player.Index] = new Vector(origin.X, origin.Y, origin.Z);
+                _lastOrigin[player.Slot] = new Vector(origin.X, origin.Y, origin.Z);
 
             return true;
         }
 
-        public void ClearPlayer(uint index)
+        public void ClearPlayer(int slot)
         {
-            _afkPlayers.Remove(index);
-            _lastOrigin.Remove(index);
+            _afkPlayers.Remove(slot);
+            _lastOrigin.Remove(slot);
         }
 
-        public bool IsAfk(CCSPlayerController player) => _afkPlayers.Contains(player.Index);
+        public bool IsAfk(CCSPlayerController player) => _afkPlayers.Contains(player.Slot);
     }
 }

@@ -26,7 +26,7 @@ namespace cs2_rockthevote
             var player = @event.Userid;
             if (player != null)
             {
-                _afkManager.ClearPlayer(player.Index);
+                _afkManager.ClearPlayer(player.Slot);
                 _rtvManager.PlayerDisconnected(player);
             }
             return HookResult.Continue;
