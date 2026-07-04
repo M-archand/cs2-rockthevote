@@ -231,9 +231,14 @@ namespace cs2_rockthevote
                 int newRemainingSeconds = currentRemainingSeconds + (minutesToExtendBy * 60);
                 int newTotalSeconds = timePlayed + newRemainingSeconds;
 
-                gameRules.RoundTime = newTotalSeconds;
+                var gameRulesProxy = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").FirstOrDefault();
+                if (gameRulesProxy == null || !gameRulesProxy.IsValid)
+                {
+                    _logger.LogWarning("[RTV.ExtendTime] cs_gamerules proxy entity not found, round time was not extended.");
+                    return false;
+                }
 
-                var gameRulesProxy = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First();
+                gameRules.RoundTime = newTotalSeconds;
                 Utilities.SetStateChanged(gameRulesProxy, "CCSGameRulesProxy", "m_pGameRules");
                 
                 if (!timeLimitManager.UnlimitedTime)
