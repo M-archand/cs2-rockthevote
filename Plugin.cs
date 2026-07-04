@@ -1,5 +1,6 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Attributes;
 using static CounterStrikeSharp.API.Core.Listeners;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Events;
@@ -24,6 +25,7 @@ namespace cs2_rockthevote
         }
     }
 
+    [MinimumApiVersion(369)]
     public partial class Plugin(DependencyManager<Plugin, Config> dependencyManager,
         NominationCommand nominationManager,
         ChangeMapManager changeMapManager,
