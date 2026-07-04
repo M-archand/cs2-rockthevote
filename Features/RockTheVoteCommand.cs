@@ -45,7 +45,7 @@ namespace cs2_rockthevote
         private GeneralConfig _generalConfig = new();
         private AsyncVoteManager? _voteManager;
         private bool _isCooldownActive = false;
-        private CCSPlayerController? _initiatingPlayer;
+        private string _initiatingPlayerName = "";
         private DateTime _cooldownEndTime;
         private DateTime _rtvEndTime;
         private Plugin? _plugin;
@@ -186,7 +186,7 @@ namespace cs2_rockthevote
                 if (player == null)
                     return;
 
-                _initiatingPlayer = player;
+                _initiatingPlayerName = player.PlayerName;
                 bool otherVoteInProgress = _pluginState.MapChangeScheduled || _pluginState.EofVoteHappening || _pluginState.ExtendTimeVoteHappening;
 
                 double elapsed = Server.CurrentTime - _gameRules.GameStartTime;
@@ -400,7 +400,7 @@ namespace cs2_rockthevote
                 case YesNoVoteAction.VoteAction_Start:
                     _rtvEndTime = DateTime.UtcNow.AddSeconds(_config.RtvVoteDuration);
                     _pluginState.RtvVoteHappening = true;
-                    Server.PrintToChatAll($"{_localizer.LocalizeWithPrefix("rtv.rocked-the-vote", _initiatingPlayer!.PlayerName)}");
+                    Server.PrintToChatAll($"{_localizer.LocalizeWithPrefix("rtv.rocked-the-vote", _initiatingPlayerName)}");
                     break;
 
                 case YesNoVoteAction.VoteAction_Vote:

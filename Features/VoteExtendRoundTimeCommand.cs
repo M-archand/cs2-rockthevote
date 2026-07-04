@@ -50,7 +50,7 @@ namespace cs2_rockthevote
         private PluginState _pluginState = pluginState;
         private VoteExtendConfig _voteExtendConfig = new();
         private GeneralConfig _generalConfig = new();
-        private CCSPlayerController? _initiatingPlayer;
+        private string _initiatingPlayerName = "";
         private DateTime _cooldownEndTime;
         private Plugin? _plugin;
         private Timer? _cooldownTimer;
@@ -58,7 +58,7 @@ namespace cs2_rockthevote
 
         public void CommandHandler(CCSPlayerController player, CommandInfo commandInfo)
         {
-            _initiatingPlayer = player;
+            _initiatingPlayerName = player.PlayerName;
 
             if (!_voteExtendConfig.Enabled)
             {
@@ -161,7 +161,7 @@ namespace cs2_rockthevote
             switch (action)
             {
                 case YesNoVoteAction.VoteAction_Start:
-                    Server.PrintToChatAll($"{_localizer.LocalizeWithPrefix("extendtime.vote-started", _initiatingPlayer!.PlayerName)}");
+                    Server.PrintToChatAll($"{_localizer.LocalizeWithPrefix("extendtime.vote-started", _initiatingPlayerName)}");
                     break;
 
                 case YesNoVoteAction.VoteAction_Vote:
