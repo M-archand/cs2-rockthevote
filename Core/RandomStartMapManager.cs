@@ -1,27 +1,19 @@
-using CounterStrikeSharp.API;
-using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 using Microsoft.Extensions.Logging;
 
 namespace cs2_rockthevote
 {
-    public class RandomStartMapManager(MapLister mapLister, ILogger<RandomStartMapManager> logger) : IPluginDependency<Plugin, Config>
+    public class RandomStartMapManager(MapLister mapLister, ChangeMapManager changeMapManager, ILogger<RandomStartMapManager> logger) : IPluginDependency<Plugin, Config>
     {
         private readonly ILogger<RandomStartMapManager> _logger = logger;
         private readonly MapLister _mapLister = mapLister;
+        private readonly ChangeMapManager _changeMapManager = changeMapManager;
         private bool _firstMapStart = true;
-        private Timer? _timerChangeMap;
         private GeneralConfig _generalConfig = new();
         private Plugin? _plugin;
 
         public void OnLoad(Plugin plugin)
         {
             _plugin = plugin;
-        }
-
-        public void Unload(Plugin plugin)
-        {
-            _timerChangeMap?.Kill();
-            _timerChangeMap = null;
         }
 
         public void OnConfigParsed(Config config)
@@ -48,21 +40,9 @@ namespace cs2_rockthevote
             // Pick a random map
             var pick = candidates[new Random().Next(candidates.Count)];
 
-            // Schedule our map change for 3s from now (1s didn't seem to work)
-            _timerChangeMap?.Kill();
-            _timerChangeMap = _plugin?.AddTimer(3.0f, () =>
-            {
-                if (!string.IsNullOrEmpty(pick.Id) && ulong.TryParse(pick.Id, out var wsID))
-                {
-                    // Workshop map by ID (E.g. 3129698096)
-                    Server.ExecuteCommand($"host_workshop_map {wsID}");
-                }
-                else
-                {
-                    // Local map by name (E.g. de_dust2)
-                    Server.ExecuteCommand($"changelevel {pick.Name}");
-                }
-            });
+            // Route through ChangeMapManager as it gives IsMapValid fallback + verify-retry
+            _changeMapManager.ScheduleMapChange(pick.Name);
+            _changeMapManager.ChangeNextMap();
         }
     }
 }
