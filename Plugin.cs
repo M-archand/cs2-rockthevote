@@ -31,6 +31,7 @@ namespace cs2_rockthevote
         ChangeMapManager changeMapManager,
         VotemapCommand voteMapManager,
         RockTheVoteCommand rtvManager,
+        EndMapVoteManager endMapVoteManager,
         ExtendRoundTimeCommand extendRoundTime,
         VoteExtendRoundTimeCommand voteExtendRoundTime,
         TimeLeftCommand timeLeft,
@@ -50,6 +51,7 @@ namespace cs2_rockthevote
         private readonly ChangeMapManager _changeMapManager = changeMapManager;
         private readonly VotemapCommand _votemapManager = voteMapManager;
         private readonly RockTheVoteCommand _rtvManager = rtvManager;
+        private readonly EndMapVoteManager _endMapVoteManager = endMapVoteManager;
         private readonly AFKManager _afkManager = afkManager;
         private readonly ExtendRoundTimeCommand _extendRoundTime = extendRoundTime;
         private readonly VoteExtendRoundTimeCommand _voteExtendRoundTime = voteExtendRoundTime;
@@ -180,6 +182,7 @@ namespace cs2_rockthevote
                 _nominationManager.PlayerDisconnected(player);
                 _voteExtendRoundTime.PlayerDisconnected(player);
                 _votemapManager.PlayerDisconnected(player);
+                _endMapVoteManager.PlayerDisconnected(player);
             }
             return HookResult.Continue;
         }

@@ -463,6 +463,26 @@ namespace cs2_rockthevote
                 EndVote(isRtv);
         }
 
+        public void PlayerDisconnected(CCSPlayerController? player)
+        {
+            if (player == null)
+                return;
+
+            int slot = player.Slot;
+            _revoteMenuOpen.Remove(slot);
+
+            if (!_playerVotes.TryGetValue(slot, out var votedMap))
+                return;
+
+            _playerVotes.Remove(slot);
+            VotedPlayers.Remove(slot);
+
+            if (Votes.TryGetValue(votedMap, out int count) && count > 0)
+                Votes[votedMap] = count - 1;
+
+            RebuildSortedTopVotes();
+        }
+
         public void KillTimer()
         {
             TimeLeft = -1;
