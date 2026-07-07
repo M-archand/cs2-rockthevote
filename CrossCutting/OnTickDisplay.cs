@@ -14,6 +14,7 @@ namespace cs2_rockthevote.CrossCutting
         private readonly StringLocalizer _localizer;
         private readonly StringBuilder _hudBuilder = new();
         private readonly CCSPlayerController?[] _playerSlots = new CCSPlayerController?[VoteConstants.MAXPLAYERS];
+        private Plugin? _plugin;
         private bool _hooked;
         private GeneralConfig _generalConfig = new();
         private EndOfMapConfig _endMapConfig = new();
@@ -36,17 +37,50 @@ namespace cs2_rockthevote.CrossCutting
             _endMapConfig = config.EndOfMapVote;
             _voteExtendConfig = config.VoteExtend;
             _rtvConfig = config.Rtv;
+
+            if (_plugin != null)
+                ApplyHookState(_plugin);
         }
 
         public void OnLoad(Plugin plugin)
         {
-            if (_endMapConfig.CountdownType == "hud" || _rtvConfig.CountdownType == "hud" || _voteExtendConfig.CountdownType == "hud" || _endMapConfig.MenuType == "HudMenu" || _nomConfig.MenuType == "HudMenu")
+            _plugin = plugin;
+            ApplyHookState(plugin);
+        }
+
+        private bool ShouldHook() =>
+            _endMapConfig.CountdownType == "hud"
+            || _rtvConfig.CountdownType == "hud"
+            || _voteExtendConfig.CountdownType == "hud"
+            || _endMapConfig.MenuType == "HudMenu"
+            || _nomConfig.MenuType == "HudMenu";
+
+        private void ApplyHookState(Plugin plugin)
+        {
+            bool shouldHook = ShouldHook();
+
+            if (shouldHook && !_hooked)
             {
                 plugin.RegisterListener<OnTick>(PlayerOnTick);
                 plugin.RegisterEventHandler<EventPlayerConnectFull>(OnPlayerConnectFull);
                 plugin.RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawnCache, HookMode.Pre);
                 plugin.RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnectCache, HookMode.Pre);
                 _hooked = true;
+
+                Server.NextFrame(() =>
+                {
+                    foreach (var player in ServerManager.ValidPlayers())
+                        CachePlayer(player);
+                });
+            }
+            else if (!shouldHook && _hooked)
+            {
+                plugin.RemoveListener<OnTick>(PlayerOnTick);
+                plugin.DeregisterEventHandler<EventPlayerConnectFull>(OnPlayerConnectFull);
+                plugin.DeregisterEventHandler<EventPlayerSpawn>(OnPlayerSpawnCache, HookMode.Pre);
+                plugin.DeregisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnectCache, HookMode.Pre);
+                Array.Clear(_playerSlots, 0, _playerSlots.Length);
+                _hooked = false;
             }
         }
 

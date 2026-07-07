@@ -15,6 +15,7 @@ namespace cs2_rockthevote
 
         private string[] _permissions = ["@css/root", "@css/admin"];
         private MapChooserConfig _config = new();
+        private readonly HashSet<string> _registeredAliases = new(StringComparer.OrdinalIgnoreCase);
 
         public MapChooserCommand(StringLocalizer localizer, MapLister mapLister, ILogger<MapChooserCommand> logger)
         {
@@ -40,7 +41,12 @@ namespace cs2_rockthevote
             {
                 foreach (var alias in _config.Command.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                 {
-                    _plugin?.AddCommand(alias, "Opens the Map Chooser Menu", ExecuteCommand);
+                    // Skip aliases already registered
+                    if (_plugin == null || _registeredAliases.Contains(alias))
+                        continue;
+
+                    _plugin.AddCommand(alias, "Opens the Map Chooser Menu", ExecuteCommand);
+                    _registeredAliases.Add(alias);
                 }
             });
         }
