@@ -518,6 +518,36 @@ namespace cs2_rockthevote
             );
         }
 
+        // Re-check the RTV pass threshold outside !rtv (e.g. after disconnects, shrink pool), non-panorama only
+        private void TryPassByThreshold()
+        {
+            if (_voteManager == null || !_config.Enabled)
+                return;
+
+            bool usePanorama = _config.EnablePanorama && !_config.AlwaysActive;
+            if (usePanorama)
+                return;
+
+            if (_voteManager.VotesAlreadyReached || _voteManager.VoteCount == 0)
+                return;
+
+            if (_pluginState.MapChangeScheduled || _pluginState.EofVoteHappening)
+                return;
+
+            bool countVotedAsActive = TreatVotedPlayersAsActive();
+            int eligible = Math.Max(EligibleCount(countVotedAsActive), 0);
+            int requiredYesVotes = RequiredYesVotes(eligible);
+
+            if (_voteManager.VoteCount < requiredYesVotes)
+                return;
+
+            if (!_config.AlwaysActive)
+                StopRtvTimer();
+            StopReminderTimer();
+            _endmapVoteManager.StartVote(isRtv: true);
+            Server.PrintToChatAll(_localizer.LocalizeWithPrefix("rtv.votes-reached"));
+        }
+
         private void SendReminder()
         {
             if (_voteManager == null || !_config.AlwaysActive || !_config.AlwaysActiveReminder)
@@ -545,6 +575,7 @@ namespace cs2_rockthevote
 
             if (remaining <= 0)
             {
+                TryPassByThreshold();
                 StopReminderTimer();
                 return;
             }
@@ -586,7 +617,21 @@ namespace cs2_rockthevote
             bool usePanorama = _config.EnablePanorama && !_config.AlwaysActive;
 
             if (!usePanorama)
+            {
                 _voteManager?.RemoveVote(player.Slot);
+
+                Server.NextFrame(() =>
+                {
+                    try
+                    {
+                        TryPassByThreshold();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "[RTV.rtvCommand] Post-disconnect threshold re-check failed: {Message}", ex.Message);
+                    }
+                });
+            }
             else
                 PanoramaVote.RemovePlayerFromVote(player.Slot);
         }
