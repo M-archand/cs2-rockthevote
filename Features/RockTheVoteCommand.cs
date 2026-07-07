@@ -71,6 +71,13 @@ namespace cs2_rockthevote
         {
             _config = config.Rtv;
             _generalConfig = config.General;
+
+            if (_config.EnablePanorama && _config.AlwaysActive)
+            {
+                _logger.LogWarning("[RTV.rtvCommand] Rtv.EnablePanorama and Rtv.AlwaysActive are both enabled in your config but they are incompatible; forcing AlwaysActive=false so the panorama vote is used.");
+                _config.AlwaysActive = false;
+            }
+
             _voteManager = new AsyncVoteManager(_config.VotePercentage);
 
             if (!uint.TryParse(_config.SoundPath, out _) && !SoundEventHelper.IsFullVolume(_config.SoundVolume))
