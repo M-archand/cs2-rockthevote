@@ -51,15 +51,15 @@ namespace cs2_rockthevote
 
         public void ExtendTimeVoted(CCSPlayerController player, string voteResponse)
         {
-            if (player == null || !player.IsValid || player.UserId == null)
+            if (player == null || !player.IsValid)
                 return;
 
-            int userId = player.UserId!.Value;
+            int slot = player.Slot;
 
-            if (Votes.ContainsKey(userId))
+            if (Votes.ContainsKey(slot))
                 return;
 
-            Votes[userId] = voteResponse;
+            Votes[slot] = voteResponse;
             player.PrintToCenter(_localizer.LocalizeWithPrefix("extendtime.you-voted", voteResponse));
 
             if (Votes.Count >= _canVote)
@@ -76,9 +76,9 @@ namespace cs2_rockthevote
             }
         }
 
-        public void RemoveVote(int userId)
+        public void RemoveVote(int slot)
         {
-            Votes.Remove(userId);
+            Votes.Remove(slot);
         }
 
         public static void PrintCenterTextAll(string text)

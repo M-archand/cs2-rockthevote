@@ -108,10 +108,7 @@ namespace cs2_rockthevote
 
                 players = players.Where(p =>
                 {
-                    if (p.UserId == null)
-                        return false;
-
-                    if (voters != null && voters.Contains(p.UserId.Value))
+                    if (voters != null && voters.Contains(p.Slot))
                         return true;
 
                     return !_afk.IsAfk(p);
@@ -295,7 +292,7 @@ namespace cs2_rockthevote
                     int requiredYesVotes = RequiredYesVotes(eligible);
 
                     // Add the vote first with the current eligible pool
-                    VoteResult result = _voteManager!.AddVote(player.UserId!.Value, eligible);
+                    VoteResult result = _voteManager!.AddVote(player.Slot, eligible);
 
                     switch (result.Result)
                     {
@@ -583,13 +580,13 @@ namespace cs2_rockthevote
 
         public void PlayerDisconnected(CCSPlayerController? player)
         {
-            if (player?.UserId == null)
+            if (player == null)
                 return;
 
             bool usePanorama = _config.EnablePanorama && !_config.AlwaysActive;
 
             if (!usePanorama)
-                _voteManager?.RemoveVote(player.UserId.Value);
+                _voteManager?.RemoveVote(player.Slot);
             else
                 PanoramaVote.RemovePlayerFromVote(player.Slot);
         }

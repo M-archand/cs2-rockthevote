@@ -151,11 +151,10 @@ namespace cs2_rockthevote.CrossCutting
                 var hud = _hudBuilder.ToString();
                 foreach (var player in _playerSlots)
                 {
-                    if (player == null || !player.IsValid || player.UserId == null)
+                    if (player == null || !player.IsValid)
                         continue;
 
-                    var userId = player.UserId!.Value;
-                    if (_generalConfig.HideHudAfterVote && _endMap.VotedPlayers.Contains(userId))
+                    if (_generalConfig.HideHudAfterVote && _endMap.VotedPlayers.Contains(player.Slot))
                         continue;
 
                     player.PrintToCenterHtml(hud);

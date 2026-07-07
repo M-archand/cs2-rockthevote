@@ -23,7 +23,7 @@
             VotesAlreadyReached = false;
         }
 
-        public VoteResult AddVote(int userId, int? totalPlayersOverride = null)
+        public VoteResult AddVote(int slot, int? totalPlayersOverride = null)
         {
             int totalPlayers = totalPlayersOverride ?? ServerManager.ValidPlayerCount();
             int requiredVotes = _voteValidator.RequiredVotes(totalPlayers);
@@ -32,11 +32,11 @@
                 return new VoteResult(VoteResultEnum.VotesAlreadyReached, VoteCount, requiredVotes);
 
             VoteResultEnum result;
-            if (votes.Contains(userId))
+            if (votes.Contains(slot))
                 result = VoteResultEnum.AlreadyAddedBefore;
             else
             {
-                votes.Add(userId);
+                votes.Add(slot);
                 result = VoteResultEnum.Added;
             }
 
@@ -49,9 +49,9 @@
             return new VoteResult(result, VoteCount, requiredVotes);
         }
 
-        public void RemoveVote(int userId)
+        public void RemoveVote(int slot)
         {
-            votes.Remove(userId);
+            votes.Remove(slot);
         }
     }
 }

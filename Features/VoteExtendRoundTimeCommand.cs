@@ -251,11 +251,11 @@ namespace cs2_rockthevote
 
         public void PlayerDisconnected(CCSPlayerController? player)
         {
-            if (player?.UserId == null)
+            if (player == null)
                 return;
 
             if (!_voteExtendConfig.EnablePanorama)
-                _extendRoundTimeManager?.RemoveVote(player.UserId.Value);
+                _extendRoundTimeManager?.RemoveVote(player.Slot);
             else
                 PanoramaVote.RemovePlayerFromVote(player.Slot);
         }

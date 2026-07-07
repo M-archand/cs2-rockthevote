@@ -348,7 +348,7 @@ namespace cs2_rockthevote
 
         private void OnRevoteCommand(CCSPlayerController? player, CommandInfo _)
         {
-            if (player == null || !player.IsValid || player.UserId == null)
+            if (player == null || !player.IsValid)
                 return;
 
             if (!_pluginState.EofVoteHappening || Timer is null || _currentVoteOptions.Count == 0)
@@ -358,7 +358,7 @@ namespace cs2_rockthevote
                 return;
 
             // Already showing a revote menu for this player - their vote is active, ignore repeat requests
-            if (!_revoteMenuOpen.Add(player.UserId.Value))
+            if (!_revoteMenuOpen.Add(player.Slot))
                 return;
 
             int menuTimeLeft = Math.Max(TimeLeft, 1);
@@ -383,8 +383,7 @@ namespace cs2_rockthevote
                 var chosen = option;
                 menu.AddItem(chosen, (p, _) =>
                 {
-                    if (p.UserId != null)
-                        _revoteMenuOpen.Remove(p.UserId.Value);
+                    _revoteMenuOpen.Remove(p.Slot);
 
                     MapVoted(p, chosen, isRtv, allowRevote: true);
                 });
@@ -422,7 +421,7 @@ namespace cs2_rockthevote
 
         public void MapVoted(CCSPlayerController player, string mapName, bool isRtv, bool allowRevote = false)
         {
-            if (!player.IsValid || player.UserId == null)
+            if (!player.IsValid)
                 return;
 
             if (!_pluginState.EofVoteHappening || Timer is null)
@@ -431,10 +430,10 @@ namespace cs2_rockthevote
             if (!Votes.ContainsKey(mapName))
                 return;
 
-            var userId = player.UserId!.Value;
+            var slot = player.Slot;
             bool canRevote = _endMapConfig.EnableRevote && allowRevote;
 
-            if (_playerVotes.TryGetValue(userId, out var previousMap))
+            if (_playerVotes.TryGetValue(slot, out var previousMap))
             {
                 if (!canRevote)
                     return;
@@ -449,10 +448,10 @@ namespace cs2_rockthevote
             }
             else
             {
-                VotedPlayers.Add(userId);
+                VotedPlayers.Add(slot);
             }
 
-            _playerVotes[userId] = mapName;
+            _playerVotes[slot] = mapName;
             Votes[mapName] += 1;
             RebuildSortedTopVotes();
             player.PrintToChat(_localizer.LocalizeWithPrefix("emv.you-voted", mapName));

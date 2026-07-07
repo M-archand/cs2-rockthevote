@@ -69,12 +69,12 @@ namespace cs2_rockthevote
 
         public void PlayerDisconnected(CCSPlayerController player)
         {
-            if (player?.UserId == null)
+            if (player == null)
                 return;
 
-            int userId = player.UserId!.Value;
+            int slot = player.Slot;
             foreach (var map in VotedMaps)
-                map.Value.RemoveVote(userId);
+                map.Value.RemoveVote(slot);
         }
 
         public void OnLoad(Plugin plugin)
@@ -184,12 +184,11 @@ namespace cs2_rockthevote
                 return;
             }
 
-            var userId = player.UserId!.Value;
             if (!VotedMaps.ContainsKey(map))
                 VotedMaps.Add(map, new AsyncVoteManager(_config.VotePercentage));
 
             var voteManager = VotedMaps[map];
-            VoteResult result = voteManager.AddVote(userId);
+            VoteResult result = voteManager.AddVote(player.Slot);
             switch (result.Result)
             {
                 case VoteResultEnum.Added:
