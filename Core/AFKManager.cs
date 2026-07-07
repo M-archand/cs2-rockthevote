@@ -83,24 +83,27 @@ namespace cs2_rockthevote
         {
             if (_plugin == null) return;
 
+            int slot = player.Slot;
+
             _plugin.AddTimer(delaySeconds, () =>
             {
-                if (player == null || !player.IsValid || !player.ReallyValid())
+                var live = Utilities.GetPlayerFromSlot(slot);
+                if (live is null || !live.IsValid || !live.ReallyValid())
                     return;
 
-                _afkPlayers.Remove(player.Slot);
+                _afkPlayers.Remove(slot);
 
-                var pawn = player.PlayerPawn?.Value;
+                var pawn = live.PlayerPawn?.Value;
                 if (pawn is null || !pawn.IsValid)
                     return;
 
                 var origin = pawn.CBodyComponent?.SceneNode?.AbsOrigin;
                 if (origin != null)
                 {
-                    _lastOrigin[player.Slot] = new Vector(origin.X, origin.Y, origin.Z);
+                    _lastOrigin[slot] = new Vector(origin.X, origin.Y, origin.Z);
 
                     if (_generalConfig.DebugLogging)
-                        Server.PrintToConsole($"[RTV.AFKManager] Checked position for player: {player.PlayerName}. Position: {origin}");
+                        Server.PrintToConsole($"[RTV.AFKManager] Checked position for player: {live.PlayerName}. Position: {origin}");
                 }
             }, TimerFlags.STOP_ON_MAPCHANGE);
         }
