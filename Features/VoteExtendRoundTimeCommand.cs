@@ -28,16 +28,6 @@ namespace cs2_rockthevote
 
             _voteExtendRoundTime.CommandHandler(player, command);
         }
-
-        public HookResult EventPlayerDisconnectExtend(EventPlayerDisconnect @event, GameEventInfo @eventInfo)
-        {
-            var player = @event.Userid;
-            if (player != null)
-            {
-                _voteExtendRoundTime.PlayerDisconnected(player);
-            }
-            return HookResult.Continue;
-        }
     }
 
     public class VoteExtendRoundTimeCommand(TimeLimitManager timeLimitManager, ExtendRoundTimeManager extendRoundTimeManager, GameRules gameRules, IStringLocalizer stringLocalizer, PluginState pluginState, ILogger<VoteExtendRoundTimeCommand> logger) : IPluginDependency<Plugin, Config>

@@ -170,6 +170,20 @@ namespace cs2_rockthevote
             return HookResult.Continue;
         }
 
+        private HookResult OnPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
+        {
+            var player = @event.Userid;
+            if (player != null)
+            {
+                _afkManager.ClearPlayer(player.Slot);
+                _rtvManager.PlayerDisconnected(player);
+                _nominationManager.PlayerDisconnected(player);
+                _voteExtendRoundTime.PlayerDisconnected(player);
+                _votemapManager.PlayerDisconnected(player);
+            }
+            return HookResult.Continue;
+        }
+
         private void RegisterPluginCommandsAndEvents()
         {
             RegisterStartupCommand("css_reloadrtv", "Reloads the RTV config.", ReloadCommand);
@@ -185,10 +199,7 @@ namespace cs2_rockthevote
             RegisterStartupCommand("css_extend", "Extends time for the current map", OnExtendRoundTimeCommand);
             RegisterStartupCommand("css_votemap", "Vote to change to a map", OnVotemap);
 
-            RegisterStartupEvent<EventPlayerDisconnect>(EventPlayerDisconnectRTV, HookMode.Pre);
-            RegisterStartupEvent<EventPlayerDisconnect>(EventPlayerDisconnectNominate, HookMode.Pre);
-            RegisterStartupEvent<EventPlayerDisconnect>(EventPlayerDisconnectExtend, HookMode.Pre);
-            RegisterStartupEvent<EventPlayerDisconnect>(EventPlayerDisconnectVotemap, HookMode.Pre);
+            RegisterStartupEvent<EventPlayerDisconnect>(OnPlayerDisconnect, HookMode.Pre);
             RegisterStartupEvent<EventPlayerSpawn>(EventPlayerSpawn, HookMode.Pre);
             RegisterStartupEvent<EventRoundStart>(OnRoundStartMapChanger, HookMode.Post);
         }

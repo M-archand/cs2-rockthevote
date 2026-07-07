@@ -28,16 +28,6 @@ namespace cs2_rockthevote
 
             _nominationManager.CommandHandler(player, command.GetArg(1)?.Trim().ToLower() ?? "");
         }
-
-        public HookResult EventPlayerDisconnectNominate(EventPlayerDisconnect @event, GameEventInfo @eventInfo)
-        {
-            var player = @event.Userid;
-            if (player != null)
-            {
-                _nominationManager.PlayerDisconnected(player);
-            }
-            return HookResult.Continue;
-        }
     }
 
     public class NominationCommand : IPluginDependency<Plugin, Config>

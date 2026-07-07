@@ -29,16 +29,6 @@ namespace cs2_rockthevote
             string map = command.GetArg(1).Trim().ToLower();
             _votemapManager.CommandHandler(player, map);
         }
-
-        public HookResult EventPlayerDisconnectVotemap(EventPlayerDisconnect @event, GameEventInfo @eventInfo)
-        {
-            var player = @event.Userid;
-            if (player != null)
-            {
-                _votemapManager.PlayerDisconnected(player);
-            }
-            return HookResult.Continue;
-        }
     }
 
     public class VotemapCommand : IPluginDependency<Plugin, Config>
