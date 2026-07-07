@@ -965,8 +965,9 @@ namespace cs2_rockthevote
                         Server.PrintToChatAll(_localizer.LocalizeWithPrefix("general.changing-map-next-round", winner.Key));
                     }
                 }
-                _pluginState.EofVoteHappening = false;
             }
+
+            _pluginState.EofVoteHappening = false;
         }
     }
 }
