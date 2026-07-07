@@ -910,6 +910,8 @@ namespace cs2_rockthevote
 
             if (winner.Key == extendOption)
             {
+                _nominationManager.MarkMapExtended();
+
                 int maxExt = _generalConfig.MaxMapExtensions;
                 bool unlimited = maxExt <= 0;
 

@@ -35,6 +35,7 @@ namespace cs2_rockthevote
         private readonly ILogger<NominationCommand> _logger;
         Dictionary<int, List<string>> Nominations = new();
         private string? _nominationsMap;
+        private bool _mapExtended;
         private NominateConfig _nomConfig = new();
         private GameRules _gamerules;
         private StringLocalizer _localizer;
@@ -53,10 +54,14 @@ namespace cs2_rockthevote
             _logger = logger;
         }
 
+        public void MarkMapExtended() => _mapExtended = true;
+
         public void OnMapStart(string map)
         {
-            // Clear only on a map change, not when an extension wins
-            if (_nominationsMap != null && string.Equals(_nominationsMap, map, StringComparison.OrdinalIgnoreCase))
+            bool extended = _mapExtended;
+            _mapExtended = false;
+
+            if (extended && string.Equals(_nominationsMap, map, StringComparison.OrdinalIgnoreCase))
                 return;
 
             Nominations.Clear();
