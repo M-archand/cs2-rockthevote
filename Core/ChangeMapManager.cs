@@ -229,16 +229,7 @@ namespace cs2_rockthevote
                     mapNameIsValid
                 );
 
-                if (mapNameIsValid)
-                {
-                    _debugLogger.LogInformation(
-                        "[RTV.MapChange] Executing changelevel. map={Map} previousMap={PreviousMap}",
-                        map.Name,
-                        mapBefore
-                    );
-                    Server.ExecuteCommand($"changelevel {map.Name}");
-                }
-                else if (map.Id is not null)
+                if (map.Id is not null)
                 {
                     _debugLogger.LogInformation(
                         "[RTV.MapChange] Executing host_workshop_map. map={Map} workshopId={WorkshopId} previousMap={PreviousMap}",
@@ -247,6 +238,15 @@ namespace cs2_rockthevote
                         mapBefore
                     );
                     Server.ExecuteCommand($"host_workshop_map {map.Id}");
+                }
+                else if (mapNameIsValid)
+                {
+                    _debugLogger.LogInformation(
+                        "[RTV.MapChange] Executing changelevel. map={Map} previousMap={PreviousMap}",
+                        map.Name,
+                        mapBefore
+                    );
+                    Server.ExecuteCommand($"changelevel {map.Name}");
                 }
                 else
                 {
@@ -328,12 +328,7 @@ namespace cs2_rockthevote
 
                         Server.PrintToChatAll(_localizer.LocalizeWithPrefixInternal(_prefix, "general.changing-map", fallback.Name));
 
-                        if (Server.IsMapValid(fallback.Name))
-                        {
-                            _debugLogger.LogInformation("[RTV.MapChange] Executing fallback changelevel. map={Map}", fallback.Name);
-                            Server.ExecuteCommand($"changelevel {fallback.Name}");
-                        }
-                        else if (fallback.Id is not null)
+                        if (fallback.Id is not null)
                         {
                             _debugLogger.LogInformation(
                                 "[RTV.MapChange] Executing fallback host_workshop_map. map={Map} workshopId={WorkshopId}",
@@ -341,6 +336,11 @@ namespace cs2_rockthevote
                                 fallback.Id
                             );
                             Server.ExecuteCommand($"host_workshop_map {fallback.Id}");
+                        }
+                        else if (Server.IsMapValid(fallback.Name))
+                        {
+                            _debugLogger.LogInformation("[RTV.MapChange] Executing fallback changelevel. map={Map}", fallback.Name);
+                            Server.ExecuteCommand($"changelevel {fallback.Name}");
                         }
                         else
                         {
